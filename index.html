@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vitrum</title>
+  </head>
+  <body>
+    <div class="app-container" id="app">
+      <header class="titlebar">
+        <div class="titlebar-left" data-tauri-drag-region>
+          <button class="clickable-icon" id="btn-toggle-left" aria-label="Afficher ou masquer l'explorateur"></button>
+        </div>
+        <div class="tab-header" data-tauri-drag-region>
+          <div class="tab-list" id="tab-list" role="tablist"></div>
+          <button class="clickable-icon tab-new" id="btn-new-tab" aria-label="Nouvel onglet"></button>
+          <div class="tab-header-spacer" data-tauri-drag-region></div>
+        </div>
+        <div class="titlebar-right" data-tauri-drag-region>
+          <span class="sidebar-right-title" data-tauri-drag-region>Plan</span>
+          <button class="clickable-icon" id="btn-toggle-right" aria-label="Afficher ou masquer le plan"></button>
+          <div class="window-controls" id="window-controls"></div>
+        </div>
+      </header>
+      <nav class="ribbon" id="ribbon"></nav>
+      <aside class="sidebar sidebar-left" id="sidebar-left"></aside>
+      <main class="workspace" id="workspace"></main>
+      <aside class="sidebar sidebar-right" id="sidebar-right"></aside>
+      <div class="sidebar-resize" id="resize-left" data-side="left"></div>
+      <div class="sidebar-resize" id="resize-right" data-side="right"></div>
+    </div>
+    <div class="status-bar" id="status-bar"></div>
+    <div class="notice-container" id="notices"></div>
+    <div class="drop-overlay" id="drop-overlay"><div>Déposer pour ouvrir</div></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

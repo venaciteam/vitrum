@@ -1,0 +1,73 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un nouveau push annule la fabrication encore en cours (les minutes macOS
+# comptent dix fois sur un dépôt privé).
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    # Les runners Apple Silicon manquent souvent de place ; un runner Intel
+    # fabrique le même binaire universel (Apple Silicon + Intel).
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+      - run: npm ci
+      - name: Tests du cœur
+        working-directory: src-tauri
+        run: cargo test --locked
+      - name: Fabrication (.app + .dmg universels)
+        run: npx tauri build --target universal-apple-darwin
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vitrum-macos
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          # Le stockage des artefacts d'un compte est limité : 30 jours suffisent.
+          retention-days: 30
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          cache-on-failure: true
+      - run: npm ci
+      - name: Tests du cœur
+        working-directory: src-tauri
+        run: cargo test --locked
+      - name: Fabrication (installateur NSIS)
+        run: npx tauri build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: vitrum-windows
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          retention-days: 30

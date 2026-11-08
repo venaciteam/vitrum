@@ -1,0 +1,64 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Vitrum",
+  "version": "0.1.0",
+  "identifier": "city.vena.vitrum",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": false,
+    "security": {
+      "csp": {
+        "default-src": "'self' ipc: http://ipc.localhost",
+        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' data: blob: https: http: vmedia:",
+        "media-src": "'self' data: blob: https: http: vmedia:",
+        "font-src": "'self' data:",
+        "frame-src": "http://vmedia.localhost vmedia: https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+        "connect-src": "'self' ipc: http://ipc.localhost",
+        "object-src": "'none'"
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "category": "Productivity",
+    "shortDescription": "Lecteur et éditeur Markdown",
+    "longDescription": "Lit et modifie des fichiers Markdown façon Obsidian, où qu'ils soient sur le disque.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown", "mdown", "mkd", "mkdn"],
+        "name": "Vitrum.Markdown",
+        "description": "Document Markdown",
+        "role": "Editor",
+        "rank": "Default",
+        "mimeType": "text/markdown",
+        "contentTypes": ["net.daringfireball.markdown"]
+      }
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["French"],
+        "displayLanguageSelector": false,
+        "installerHooks": "./windows/hooks.nsh"
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  }
+}

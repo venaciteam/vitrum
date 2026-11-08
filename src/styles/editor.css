@@ -1,0 +1,206 @@
+/* Mode édition : Markdown brut coloré, dans la police du texte (comme Obsidian). */
+
+.cm-host .cm-editor {
+  font-family: var(--font-text);
+  color: var(--text-normal);
+  background: transparent;
+}
+.cm-host .cm-editor.cm-focused {
+  outline: none;
+}
+.cm-host .cm-scroller {
+  font-family: inherit;
+  line-height: var(--line-height-normal);
+}
+.cm-host .cm-content {
+  padding: 0;
+  caret-color: var(--caret-color);
+}
+.cm-host .cm-line {
+  padding: 0;
+}
+.cm-host .cm-cursor,
+.cm-host .cm-dropCursor {
+  border-left: 2px solid var(--caret-color);
+}
+.cm-host .cm-selectionBackground,
+.cm-host .cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground {
+  background: var(--text-selection) !important;
+}
+.cm-host .cm-selectionMatch {
+  background: var(--background-modifier-hover);
+}
+
+/* Titres : taille réelle, marques # estompées */
+.cm-host .cm-header-line {
+  line-height: var(--line-height-tight);
+  padding-top: 0.35em;
+  padding-bottom: 0.1em;
+}
+.cm-host .cm-header-line-1 {
+  font-size: var(--h1-size);
+}
+.cm-host .cm-header-line-2 {
+  font-size: var(--h2-size);
+}
+.cm-host .cm-header-line-3 {
+  font-size: var(--h3-size);
+}
+.cm-host .cm-header-line-4 {
+  font-size: var(--h4-size);
+}
+.cm-host .cm-header-line-5 {
+  font-size: var(--h5-size);
+}
+.cm-host .cm-header-line-6 {
+  font-size: var(--h6-size);
+}
+.cm-host .cm-header {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+.cm-host .cm-header-1 {
+  font-weight: var(--h1-weight);
+}
+.cm-host .cm-formatting,
+.cm-host .cm-header .cm-formatting {
+  color: var(--text-faint);
+}
+.cm-host .cm-strong {
+  font-weight: 700;
+}
+.cm-host .cm-em {
+  font-style: italic;
+}
+.cm-host .cm-strikethrough {
+  text-decoration: line-through;
+}
+.cm-host .cm-link {
+  color: var(--text-accent);
+}
+.cm-host .cm-url {
+  color: var(--text-faint);
+  text-decoration: underline;
+  text-decoration-color: var(--background-modifier-border-hover);
+}
+.cm-host .cm-inline-code {
+  font-family: var(--font-monospace);
+  font-size: 0.875em;
+  background: var(--code-background);
+  border-radius: 3px;
+}
+.cm-host .cm-quote {
+  color: var(--text-normal);
+}
+.cm-host .cm-hr,
+.cm-host .cm-meta,
+.cm-host .cm-comment {
+  color: var(--text-faint);
+}
+.cm-host .cm-label {
+  color: var(--text-muted);
+}
+.cm-host .cm-atom {
+  color: var(--text-accent);
+}
+
+/* Blocs de code */
+.cm-host .cm-line.cm-codeblock {
+  font-family: var(--font-monospace);
+  font-size: 0.875em;
+  background: var(--code-background);
+  padding: 0 16px;
+}
+.cm-host .cm-line.cm-codeblock-begin {
+  border-top-left-radius: var(--radius-s);
+  border-top-right-radius: var(--radius-s);
+  padding-top: 4px;
+}
+.cm-host .cm-line.cm-codeblock-end {
+  border-bottom-left-radius: var(--radius-s);
+  border-bottom-right-radius: var(--radius-s);
+  padding-bottom: 4px;
+}
+.cm-host .cm-code-keyword {
+  color: var(--code-keyword);
+}
+.cm-host .cm-code-string {
+  color: var(--code-string);
+}
+.cm-host .cm-code-value {
+  color: var(--code-value);
+}
+.cm-host .cm-code-function {
+  color: var(--code-function);
+}
+.cm-host .cm-code-property {
+  color: var(--code-property);
+}
+.cm-host .cm-code-type {
+  color: var(--code-function);
+}
+.cm-host .cm-code-operator {
+  color: var(--code-operator);
+}
+.cm-host .cm-code-tag {
+  color: var(--code-tag);
+}
+.cm-host .cm-code-def {
+  color: var(--code-normal);
+}
+.cm-host .cm-code-punctuation {
+  color: var(--code-punctuation);
+}
+
+/* Panneau de recherche (Ctrl+F) */
+.cm-host .cm-panels {
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border-radius: var(--radius-m);
+}
+.cm-host .cm-panels.cm-panels-top {
+  border: 1px solid var(--background-modifier-border);
+  margin-bottom: 8px;
+}
+.cm-host .cm-panel.cm-search {
+  padding: 6px 30px 6px 10px;
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-small);
+}
+.cm-host .cm-textfield {
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  padding: 3px 6px;
+  font-size: var(--font-ui-small);
+}
+.cm-host .cm-textfield:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+.cm-host .cm-button {
+  background-image: none;
+  background: var(--interactive-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  padding: 2px 8px;
+}
+.cm-host .cm-panel.cm-search label {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+.cm-host .cm-panel.cm-search [name='close'] {
+  color: var(--text-muted);
+  font-size: 18px;
+  right: 8px;
+}
+.cm-host .cm-searchMatch {
+  background: var(--text-highlight-bg);
+  outline: none;
+}
+.cm-host .cm-searchMatch.cm-searchMatch-selected {
+  background: var(--text-highlight-bg-active);
+}
