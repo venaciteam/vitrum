@@ -43,7 +43,11 @@ NOM="$(printf '%s' "$DISTANT" | sed -E 's#^.*github\.com[:/]##; s#\.git$##')"
 [ "$ESSAI" = 1 ] || gh auth status >/dev/null 2>&1 || stop "gh n'est pas connecté : gh auth login"
 
 etape "État du dépôt ($DEPOT)"
+# Sur l'exFAT de VNCT, macOS pose des ._ dans .git (dont ._pack-*.idx, que git prend pour un index) : purge.
+purger() { find "$DEPOT/.git" -name '._*' -delete 2>/dev/null || true; }
+purger
 git -C "$DEPOT" fetch -q origin
+purger
 COMMIT="$(git -C "$DEPOT" rev-parse origin/main)"
 PROBLEME=""
 [ -z "$(git -C "$DEPOT" status --porcelain)" ] || PROBLEME="modifications non commitées dans le dépôt local"
