@@ -14,6 +14,8 @@
 param([switch]$Essai, [string]$Notes = "")
 
 $ErrorActionPreference = "Stop"
+# Accents corrects aussi quand la sortie est redirigée vers un journal (sinon page de code de la console).
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new()
 $Fichier = "Vitrum-Setup.exe"
 $Autre = "Vitrum-macOS.dmg"
 function Etape($t) { Write-Host "`n[*] $t" -ForegroundColor Cyan }
