@@ -5,6 +5,21 @@ Lecteur et éditeur Markdown à l'interface proche d'Obsidian, pour ouvrir des f
 
 *Vitrum* : « verre » en latin, clin d'œil à l'obsidienne, un verre volcanique.
 
+## Télécharger
+
+Version 0.1.0 :
+
+- **[Télécharger pour Windows](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe)**
+  (Windows 10 et 11, 64 bits) : l'installateur ajoute Vitrum au menu « Ouvrir avec » et propose
+  d'en faire l'application par défaut des `.md`.
+- **[Télécharger pour Mac](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)**
+  (Apple Silicon et Intel, macOS 11 ou plus récent) : ouvrir le `.dmg` et glisser Vitrum dans
+  **Applications**.
+
+Le dépôt est privé : les liens marchent une fois connecté à GitHub avec un compte qui y a accès.
+Vitrum n'est pas signé : message du système au premier lancement, voir [Windows](#windows) et
+[macOS](#macos). Toutes les versions : [publications](../../releases).
+
 ## Ce que fait Vitrum
 
 - **Mode lecture** : rendu final comme dans Obsidian (propriétés du front matter, callouts
@@ -41,8 +56,12 @@ Dans la vue de lecture, `Ctrl+clic` (ou clic molette) ouvre un lien dans un nouv
 
 ## Windows
 
-L'installateur (`Vitrum_0.1.0_x64-setup.exe`) s'installe pour l'utilisateur courant, sans droits
-administrateur. Il ajoute Vitrum au menu **Ouvrir avec** des fichiers `.md`, `.markdown`…, le
+L'installateur ([`Vitrum-Setup.exe`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe))
+s'installe pour l'utilisateur courant, sans droits administrateur. Il n'est pas signé : Windows
+SmartScreen peut afficher « Windows a protégé votre ordinateur » ; cliquer alors sur
+« Informations complémentaires », puis « Exécuter quand même ».
+
+Il ajoute Vitrum au menu **Ouvrir avec** des fichiers `.md`, `.markdown`…, le
 déclare dans les **Applications par défaut** de Windows et propose, à la fin, d'en faire
 l'application par défaut des `.md`. Windows ne laisse aucun programme se déclarer par défaut
 tout seul : il ouvre donc la page des Paramètres consacrée à Vitrum, où il reste à cliquer sur
@@ -50,27 +69,17 @@ tout seul : il ouvre donc la page des Paramètres consacrée à Vitrum, où il r
 
 ## macOS
 
-### Récupérer le `.dmg`
+### Installer
 
-Le PC ne sait pas compiler pour Mac : GitHub Actions fabrique un `.dmg` **universel** (Apple
-Silicon et Intel) à chaque push sur `main` du dépôt privé `venaciteam/vitrum` (workflow
-**build**). Pour le relancer sans push : onglet **Actions** › **build** › **Run workflow**.
+Télécharger [`Vitrum-macOS.dmg`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)
+(binaire **universel** : Apple Silicon et Intel), l'ouvrir et glisser Vitrum dans **Applications**.
 
-- **Navigateur** : onglet **Actions** › dernière exécution verte de **build** › section
-  **Artifacts** en bas de page › `vitrum-macos`. On obtient un `.zip` qui contient
-  `Vitrum_0.1.0_universal.dmg`.
-- **Terminal**, avec [GitHub CLI](https://cli.github.com) connecté (`gh auth login`) :
+Avec [GitHub CLI](https://cli.github.com) connecté (`gh auth login`), le `.dmg` arrive sans marque
+de quarantaine, donc sans avertissement au premier lancement :
 
-  ```bash
-  gh run download -R venaciteam/vitrum -n vitrum-macos
-  ```
-
-  Le `.dmg` de la dernière fabrication arrive dans le dossier courant, sans marque de
-  quarantaine : pas d'avertissement au premier lancement.
-
-Ouvrir le `.dmg` et glisser Vitrum dans **Applications**. L'installateur Windows se récupère de
-la même façon (artefact `vitrum-windows`). Les artefacts sont gardés 30 jours ; passé ce délai,
-relancer le workflow.
+```bash
+gh release download -R venaciteam/vitrum -p Vitrum-macOS.dmg
+```
 
 ### Premier lancement
 
@@ -117,6 +126,25 @@ Résultat :
 
 Tests du moteur Markdown : `cargo test` dans `src-tauri`.
 
+## Publier une version
+
+Le PC ne sait pas compiler pour Mac : GitHub Actions (workflow **build**) fabrique le `.dmg`
+universel et l'installateur Windows, puis publie la version.
+
+1. Mettre le même numéro dans `package.json`, `src-tauri/Cargo.toml` et
+   `src-tauri/tauri.conf.json` (sinon la fabrication s'arrête), puis commiter.
+2. Pousser l'étiquette correspondante :
+
+   ```bash
+   git tag v0.1.0
+   git push origin main v0.1.0
+   ```
+
+La publication `Vitrum 0.1.0` apparaît une vingtaine de minutes plus tard, avec
+`Vitrum-Setup.exe` et `Vitrum-macOS.dmg` : les liens « dernière version » du README pointent
+dessus. Pour une fabrication d'essai sans publication : onglet **Actions** › **build** ›
+**Run workflow** (fichiers dans les **Artifacts** de l'exécution, gardés 30 jours).
+
 ## Organisation
 
 - `src-tauri/` — le cœur en **Rust** (Tauri 2) : lecture et écriture des fichiers, rendu Markdown
@@ -125,7 +153,7 @@ Tests du moteur Markdown : `cargo test` dans `src-tauri`.
   instance unique, association des `.md`.
 - `src-tauri/windows/hooks.nsh` — ajouts à l'installateur Windows (« Ouvrir avec », appli par défaut).
 - `.github/workflows/build.yml` — fabrication du `.dmg` macOS et de l'installateur Windows par
-  GitHub Actions.
+  GitHub Actions, et publication des versions (étiquettes `vX.Y.Z`).
 - `src/` — l'interface (TypeScript sans framework) : onglets, explorateur, plan, éditeur
   CodeMirror 6, Mermaid, KaTeX, highlight.js, icônes Lucide.
 - `dev/` — note d'exemple ; `npm run dev` seul affiche l'interface dans un navigateur avec un

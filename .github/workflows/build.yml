@@ -1,15 +1,24 @@
+# Fabrication de Vitrum : .dmg universel pour macOS, installateur NSIS pour Windows.
+#
+# - Étiquette vX.Y.Z poussée : fabrique les deux, vérifie que la version du projet
+#   (tauri.conf.json) correspond à l'étiquette, puis publie la version GitHub avec des
+#   fichiers aux noms fixes, attendus par les liens « dernière version » du README :
+#   Vitrum-Setup.exe et Vitrum-macOS.dmg.
+# - Onglet Actions › build › Run workflow : fabrication d'essai, sans publication
+#   (fichiers en artefacts, gardés 30 jours).
+#
+# Pas de fabrication à chaque push : les minutes macOS comptent dix fois sur un dépôt privé.
 name: build
 
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Un nouveau push annule la fabrication encore en cours (les minutes macOS
-# comptent dix fois sur un dépôt privé).
+# Une nouvelle fabrication du même ref annule celle encore en cours.
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
@@ -25,6 +34,11 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - name: Version de l'étiquette
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "tauri.conf.json indique $V, l'étiquette est $GITHUB_REF_NAME"; exit 1; }
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
@@ -38,22 +52,35 @@ jobs:
         run: cargo test --locked
       - name: Fabrication (.app + .dmg universels)
         run: npx tauri build --target universal-apple-darwin
+      - name: Fichier à publier
+        run: |
+          mkdir -p out
+          cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg out/Vitrum-macOS.dmg
+          ls -l out
       - uses: actions/upload-artifact@v7
         with:
           name: vitrum-macos
-          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          path: out/Vitrum-macOS.dmg
           if-no-files-found: error
           # Le stockage des artefacts d'un compte est limité : 30 jours suffisent.
           retention-days: 30
 
   windows:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
+      - name: Version de l'étiquette
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "tauri.conf.json indique $V, l'étiquette est $GITHUB_REF_NAME"; exit 1; }
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -65,9 +92,41 @@ jobs:
         run: cargo test --locked
       - name: Fabrication (installateur NSIS)
         run: npx tauri build
+      - name: Fichier à publier
+        run: |
+          mkdir -p out
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe out/Vitrum-Setup.exe
+          ls -l out
       - uses: actions/upload-artifact@v7
         with:
           name: vitrum-windows
-          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          path: out/Vitrum-Setup.exe
           if-no-files-found: error
           retention-days: 30
+
+  publish:
+    name: Publication
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -l out
+          sha256sum out/*
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" out/* --clobber
+            gh release edit "$TAG" --draft=false --latest
+          else
+            gh release create "$TAG" out/* --title "Vitrum ${TAG#v}" --generate-notes --latest
+          fi
