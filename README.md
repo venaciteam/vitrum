@@ -7,14 +7,14 @@ Lecteur et éditeur Markdown à l'interface proche d'Obsidian, pour ouvrir des f
 
 ## Télécharger
 
-Version 0.1.0 :
+Dernière version :
 
 - **[Télécharger pour Windows](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe)**
   (Windows 10 et 11, 64 bits) : l'installateur ajoute Vitrum au menu « Ouvrir avec » et propose
   d'en faire l'application par défaut des `.md`.
 - **[Télécharger pour Mac](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)**
-  (Apple Silicon et Intel, macOS 11 ou plus récent) : ouvrir le `.dmg` et glisser Vitrum dans
-  **Applications**.
+  (Mac à puce Apple, M1 et plus récent, macOS 11 ou plus récent) : ouvrir le `.dmg` et glisser
+  Vitrum dans **Applications**. La 0.1.0 est universelle et marche aussi sur les Mac Intel.
 
 Le dépôt est privé : les liens marchent une fois connecté à GitHub avec un compte qui y a accès.
 Vitrum n'est pas signé : message du système au premier lancement, voir [Windows](#windows) et
@@ -72,7 +72,7 @@ tout seul : il ouvre donc la page des Paramètres consacrée à Vitrum, où il r
 ### Installer
 
 Télécharger [`Vitrum-macOS.dmg`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)
-(binaire **universel** : Apple Silicon et Intel), l'ouvrir et glisser Vitrum dans **Applications**.
+(Mac à puce Apple, M1 et plus récent), l'ouvrir et glisser Vitrum dans **Applications**.
 
 Avec [GitHub CLI](https://cli.github.com) connecté (`gh auth login`), le `.dmg` arrive sans marque
 de quarantaine, donc sans avertissement au premier lancement :
@@ -119,7 +119,7 @@ Résultat :
 - Windows : `src-tauri/target/release/bundle/nsis/Vitrum_0.1.0_x64-setup.exe` (et
   `src-tauri/target/release/vitrum.exe`, utilisable sans installation) ;
 - macOS : `src-tauri/target/release/bundle/dmg/Vitrum_0.1.0_aarch64.dmg` et `…/macos/Vitrum.app`.
-  Pour le binaire universel de GitHub Actions :
+  Pour un binaire universel (Apple Silicon et Intel, comme le workflow de secours) :
   `rustup target add aarch64-apple-darwin x86_64-apple-darwin`, puis
   `npm run tauri build -- --target universal-apple-darwin` (résultat dans
   `src-tauri/target/universal-apple-darwin/release/bundle/`).
@@ -128,22 +128,41 @@ Tests du moteur Markdown : `cargo test` dans `src-tauri`.
 
 ## Publier une version
 
-Le PC ne sait pas compiler pour Mac : GitHub Actions (workflow **build**) fabrique le `.dmg`
-universel et l'installateur Windows, puis publie la version.
+Chaque machine fabrique sa version et l'envoie elle-même dans la publication GitHub : le PC
+l'installateur Windows, le Mac le `.dmg` (pour sa seule puce, bien plus rapide qu'un binaire
+universel). Les deux fabriquent le même commit, `origin/main`, dans une copie propre sur le disque
+interne (`~/Library/Caches/venacity-build/vitrum` sur le Mac, `%LOCALAPPDATA%\venacity-build\vitrum`
+sur le PC) : dépendances et cache Rust y restent d'une version à l'autre.
 
-1. Mettre le même numéro dans `package.json`, `src-tauri/Cargo.toml` et
-   `src-tauri/tauri.conf.json` (sinon la fabrication s'arrête), puis commiter.
-2. Pousser l'étiquette correspondante :
+Prérequis, en plus de ceux de [Compiler](#compiler) : [GitHub CLI](https://cli.github.com) connecté
+(`gh auth login`). Sur le Mac : `xcode-select --install`, [Rust](https://rustup.rs), Node.js 20 ou
+plus récent. Sur le PC : Rust avec les outils de compilation C++ de Visual Studio, Node.js 20 ou plus
+récent.
+
+1. Changer la version partout d'un coup (`package.json`, `package-lock.json`,
+   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`), commiter et pousser :
 
    ```bash
-   git tag v0.1.0
-   git push origin main v0.1.0
+   node scripts/version.mjs 0.2.0
+   git commit -am "Version 0.2.0" && git push
    ```
 
-La publication `Vitrum 0.1.0` apparaît une vingtaine de minutes plus tard, avec
-`Vitrum-Setup.exe` et `Vitrum-macOS.dmg` : les liens « dernière version » du README pointent
-dessus. Pour une fabrication d'essai sans publication : onglet **Actions** › **build** ›
-**Run workflow** (fichiers dans les **Artifacts** de l'exécution, gardés 30 jours).
+2. Essai sur chaque machine, sans rien envoyer : `scripts/publier.sh --essai` (Mac),
+   `.\scripts\publier.ps1 -Essai` (PC). Le fichier produit est indiqué à la fin.
+3. Publication : `scripts/publier.sh` sur le Mac, `.\scripts\publier.ps1` sur le PC, dans n'importe quel
+   ordre. Le premier crée la version `vX.Y.Z` en **brouillon** (notes en français avec
+   `--notes notes.md` / `-Notes notes.md`) et y dépose son fichier ; le second y ajoute le sien et
+   publie la version. Les liens « dernière version » ne changent donc qu'une fois `Vitrum-Setup.exe`
+   et `Vitrum-macOS.dmg` présents tous les deux.
+
+Les scripts s'arrêtent s'il reste des modifications non commitées, si `main` diffère de
+`origin/main`, si les versions des trois fichiers ne concordent pas, si les tests du cœur échouent,
+ou si la publication existante vise un autre commit.
+
+**Secours** : onglet **Actions** › **build** › **Run workflow** fabrique les deux sur GitHub (une
+vingtaine de minutes, `.dmg` universel) ; avec l'option **publier**, il publie aussi la version
+de `tauri.conf.json`. Sans l'option, les fichiers restent dans les **Artifacts** de l'exécution
+(30 jours).
 
 ## Organisation
 
@@ -152,8 +171,9 @@ dessus. Pour une fabrication d'essai sans publication : onglet **Actions** › *
   surveillance des fichiers ouverts, protocole `vmedia` pour afficher les médias locaux,
   instance unique, association des `.md`.
 - `src-tauri/windows/hooks.nsh` — ajouts à l'installateur Windows (« Ouvrir avec », appli par défaut).
-- `.github/workflows/build.yml` — fabrication du `.dmg` macOS et de l'installateur Windows par
-  GitHub Actions, et publication des versions (étiquettes `vX.Y.Z`).
+- `scripts/` — `publier.sh` (Mac) et `publier.ps1` (PC) fabriquent et publient une version,
+  `version.mjs` change la version partout.
+- `.github/workflows/build.yml` — fabrication de secours par GitHub Actions, lancée à la main.
 - `src/` — l'interface (TypeScript sans framework) : onglets, explorateur, plan, éditeur
   CodeMirror 6, Mermaid, KaTeX, highlight.js, icônes Lucide.
 - `dev/` — note d'exemple ; `npm run dev` seul affiche l'interface dans un navigateur avec un

@@ -1,19 +1,23 @@
-# Fabrication de Vitrum : .dmg universel pour macOS, installateur NSIS pour Windows.
+# Fabrication de SECOURS de Vitrum : .dmg universel pour macOS, installateur NSIS pour Windows.
 #
-# - Étiquette vX.Y.Z poussée : fabrique les deux, vérifie que la version du projet
-#   (tauri.conf.json) correspond à l'étiquette, puis publie la version GitHub avec des
-#   fichiers aux noms fixes, attendus par les liens « dernière version » du README :
-#   Vitrum-Setup.exe et Vitrum-macOS.dmg.
-# - Onglet Actions › build › Run workflow : fabrication d'essai, sans publication
-#   (fichiers en artefacts, gardés 30 jours).
+# Les versions se fabriquent normalement sur les machines (scripts/publier.sh sur le Mac,
+# scripts/publier.ps1 sur le PC, voir « Publier une version » dans le README). Ce workflow ne
+# part qu'à la main : onglet Actions › build › Run workflow.
+# - Par défaut : fabrication d'essai, fichiers en artefacts (gardés 30 jours).
+# - Option « publier » : publie aussi la version de tauri.conf.json (vX.Y.Z), avec des fichiers
+#   aux noms fixes attendus par les liens « dernière version » du README : Vitrum-Setup.exe et
+#   Vitrum-macOS.dmg (ici universel : Apple Silicon et Intel).
 #
-# Pas de fabrication à chaque push : les minutes macOS comptent dix fois sur un dépôt privé.
+# Aucun déclenchement automatique : les minutes macOS comptent dix fois sur un dépôt privé.
 name: build
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publier:
+        description: "Publier la version de tauri.conf.json (sinon : essai, fichiers en artefacts)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,11 +38,12 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Version de l'étiquette
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Versions identiques
         run: |
           V=$(node -p "require('./src-tauri/tauri.conf.json').version")
-          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "tauri.conf.json indique $V, l'étiquette est $GITHUB_REF_NAME"; exit 1; }
+          P=$(node -p "require('./package.json').version")
+          C=$(sed -n 's/^version *= *"\(.*\)"/\1/p' src-tauri/Cargo.toml | head -1)
+          [ "$V" = "$P" ] && [ "$V" = "$C" ] || { echo "tauri.conf.json $V, package.json $P, Cargo.toml $C"; exit 1; }
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
@@ -76,11 +81,12 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Version de l'étiquette
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Versions identiques
         run: |
           V=$(node -p "require('./src-tauri/tauri.conf.json').version")
-          [ "v$V" = "$GITHUB_REF_NAME" ] || { echo "tauri.conf.json indique $V, l'étiquette est $GITHUB_REF_NAME"; exit 1; }
+          P=$(node -p "require('./package.json').version")
+          C=$(sed -n 's/^version *= *"\(.*\)"/\1/p' src-tauri/Cargo.toml | head -1)
+          [ "$V" = "$P" ] && [ "$V" = "$C" ] || { echo "tauri.conf.json $V, package.json $P, Cargo.toml $C"; exit 1; }
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -106,12 +112,16 @@ jobs:
 
   publish:
     name: Publication
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: inputs.publier
     needs: [macos, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: src-tauri/tauri.conf.json
+          sparse-checkout-cone-mode: false
       - uses: actions/download-artifact@v8
         with:
           path: out
@@ -120,13 +130,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
         run: |
+          V=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          TAG="v$V"
           ls -l out
           sha256sum out/*
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" out/* --clobber
             gh release edit "$TAG" --draft=false --latest
           else
-            gh release create "$TAG" out/* --title "Vitrum ${TAG#v}" --generate-notes --latest
+            gh release create "$TAG" out/* --target "$GITHUB_SHA" --title "Vitrum $V" --notes "Vitrum $V." --latest
           fi
