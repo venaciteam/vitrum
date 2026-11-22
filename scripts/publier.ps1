@@ -21,6 +21,14 @@ $Autre = "Vitrum-macOS.dmg"
 function Etape($t) { Write-Host "`n[*] $t" -ForegroundColor Cyan }
 function Alerte($t) { Write-Host "    !! $t" -ForegroundColor Yellow }
 function Arreter($t) { Write-Host "`n[!] $t" -ForegroundColor Red; exit 1 }
+# Commande dont l'échec est une réponse attendue (« pas de publication ») : sous Windows PowerShell 5.1,
+# rediriger sa sortie d'erreur avec $ErrorActionPreference = "Stop" arrêterait le script.
+function Reussit([scriptblock]$Commande) {
+    $avant = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try { & $Commande *> $null } finally { $ErrorActionPreference = $avant }
+    return $LASTEXITCODE -eq 0
+}
 function Verifier($quoi) { if ($LASTEXITCODE -ne 0) { Arreter "$quoi a échoué (code $LASTEXITCODE)" } }
 
 $Depot = Split-Path -Parent $PSScriptRoot
@@ -32,7 +40,7 @@ foreach ($c in "git", "gh", "node", "npm", "cargo") {
 }
 $Distant = git -C $Depot remote get-url origin
 $Nom = $Distant -replace '^.*github\.com[:/]', '' -replace '\.git$', ''
-if (-not $Essai) { gh auth status *> $null; if ($LASTEXITCODE -ne 0) { Arreter "gh n'est pas connecté : gh auth login" } }
+if (-not $Essai -and -not (Reussit { gh auth status })) { Arreter "gh n'est pas connecté : gh auth login" }
 
 Etape "État du dépôt ($Depot)"
 git -C $Depot fetch -q origin; Verifier "git fetch"
@@ -83,8 +91,7 @@ Write-Host "    $(Join-Path $Sortie $Fichier)"
 if ($Essai) { Write-Host "`nEssai terminé, rien n'est envoyé : $(Join-Path $Sortie $Fichier)" -ForegroundColor Green; exit 0 }
 
 Etape "Publication $Etiquette sur $Nom"
-gh release view $Etiquette -R $Nom *> $null
-if ($LASTEXITCODE -eq 0) {
+if (Reussit { gh release view $Etiquette -R $Nom }) {
     $CiblePub = gh release view $Etiquette -R $Nom --json targetCommitish -q .targetCommitish
     if ($CiblePub -ne $Commit -and $CiblePub -ne "main") { Arreter "la publication $Etiquette vise $CiblePub, pas $Commit : l'autre machine a fabriqué un autre commit." }
 } else {
