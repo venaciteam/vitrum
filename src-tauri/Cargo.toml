@@ -1,6 +1,6 @@
 [package]
 name = "vitrum"
-version = "0.2.0"
+version = "0.2.1"
 description = "Lecteur et editeur Markdown"
 edition = "2021"
 
