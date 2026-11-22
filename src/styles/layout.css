@@ -961,3 +961,86 @@ select.dropdown {
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--background-modifier-border-focus);
 }
+
+/* --- Zoom du contenu --- */
+.zoom-indicator {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  z-index: 60;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: var(--radius-m);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.zoom-indicator.is-visible {
+  opacity: 1;
+  transition: none;
+}
+.menu-zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 32px;
+}
+.menu-zoom-label {
+  flex: 1;
+  margin-right: 12px;
+}
+.menu-zoom-button,
+.menu-zoom-value {
+  height: 24px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--interactive-normal);
+  color: var(--text-normal);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.menu-zoom-button {
+  width: 26px;
+  padding: 0;
+}
+.menu-zoom-value {
+  min-width: 56px;
+  padding: 0 6px;
+}
+.menu-zoom-button:hover,
+.menu-zoom-value:hover {
+  background: var(--interactive-hover);
+}
+
+/* --- Dossiers favoris (haut du panneau de fichiers) --- */
+.nav-favorites {
+  flex: none;
+  max-height: 40%;
+  overflow-y: auto;
+  padding: 8px 0 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.nav-section-title {
+  padding: 0 14px 4px;
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.nav-favorite .tree-item-icon {
+  display: flex;
+  color: var(--text-faint);
+}
+.nav-favorite.is-missing {
+  opacity: 0.45;
+  cursor: default;
+  text-decoration: line-through;
+}

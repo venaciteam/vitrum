@@ -46,12 +46,18 @@ export interface MenuItem {
 let openMenu: Menu | null = null;
 
 export class Menu {
-  private items: (MenuItem | 'separator')[] = [];
+  private items: (MenuItem | 'separator' | HTMLElement)[] = [];
   private dom: HTMLElement | null = null;
   private cleanup: (() => void) | null = null;
 
   addItem(item: MenuItem): this {
     this.items.push(item);
+    return this;
+  }
+
+  /** Ligne libre (boutons, valeur…) : un clic dedans ne ferme pas le menu. */
+  addCustom(row: HTMLElement): this {
+    this.items.push(row);
     return this;
   }
 
@@ -77,6 +83,10 @@ export class Menu {
     for (const item of this.items) {
       if (item === 'separator') {
         menu.append(el('div', 'menu-separator'));
+        continue;
+      }
+      if (item instanceof HTMLElement) {
+        menu.append(item);
         continue;
       }
       const row = el('div', 'menu-item');

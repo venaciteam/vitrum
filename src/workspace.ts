@@ -13,12 +13,13 @@ import { basename, dirname, NOTE_EXT, samePath } from './paths';
 import { addRecent, applyAppearance, onSettingsChange, saveSession, session, settings, updateSettings, type Mode } from './settings';
 import { Tab, type TabHost } from './tab';
 import { copyText, dropdown, el, iconButton, Menu, notice, openModal, settingRow, toggle } from './ui';
+import { ZoomController, zoomKey, zoomLabel, type ZoomTarget } from './zoom';
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 
 const MD_FILTER = [{ name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx', 'txt'] }];
 
-export class Workspace implements TabHost {
+export class Workspace implements TabHost, ZoomTarget {
   tabs: Tab[] = [];
   active: Tab | null = null;
   private explorer: Explorer;
@@ -31,6 +32,7 @@ export class Workspace implements TabHost {
   /** Onglets fermés, pour Ctrl+Maj+T. */
   private closed: string[] = [];
   private windowTitle = '';
+  private zoom!: ZoomController;
 
   constructor() {
     this.explorer = new Explorer({
@@ -50,6 +52,8 @@ export class Workspace implements TabHost {
     applyAppearance();
     this.buildChrome();
     this.layout();
+    this.zoom = new ZoomController(this);
+    this.zoom.onChange(() => this.updateStatus());
     this.bindKeys();
     if (isTauri) {
       this.bindWindow();
@@ -353,6 +357,11 @@ export class Workspace implements TabHost {
     const mode = item(tab.mode === 'preview' ? 'Lecture' : 'Édition', 'mod-clickable');
     mode.title = `Changer de mode (${modKey}E)`;
     mode.addEventListener('click', () => void tab.toggleMode());
+    if (settings.zoom !== 1) {
+      const zoom = item(`Zoom ${zoomLabel()}`, 'mod-clickable');
+      zoom.title = `Revenir à 100 % (${modKey}0)`;
+      zoom.addEventListener('click', () => this.zoom.run('reset', 'status'));
+    }
     const fmt = (n: number) => n.toLocaleString('fr-FR');
     item(`${fmt(tab.stats.words)} mot${tab.stats.words > 1 ? 's' : ''}`);
     item(`${fmt(tab.stats.chars)} caractère${tab.stats.chars > 1 ? 's' : ''}`);
@@ -508,6 +517,43 @@ export class Workspace implements TabHost {
     return m;
   }
 
+  /** Zoom en gardant sous les yeux le texte affiché à la hauteur `y`. */
+  zoomAround(change: () => void, y?: number): void {
+    const tab = this.active;
+    const anchor = tab?.captureAnchor(y) ?? null;
+    change();
+    if (tab && anchor) tab.restoreAnchor(anchor);
+  }
+
+  /** Ligne « Zoom  −  120 %  + » du menu « … ». */
+  private zoomRow(): HTMLElement {
+    const row = el('div', 'menu-zoom-row');
+    const value = el('button', 'menu-zoom-value', zoomLabel());
+    value.title = `Revenir à 100 % (${modKey}0)`;
+    const button = (label: string, title: string, action: 'in' | 'out') => {
+      const b = el('button', 'menu-zoom-button', label);
+      b.title = title;
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.zoom.run(action, 'menu-row');
+        value.textContent = zoomLabel();
+      });
+      return b;
+    };
+    value.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.zoom.run('reset', 'menu-row');
+      value.textContent = zoomLabel();
+    });
+    row.append(
+      el('span', 'menu-zoom-label', 'Zoom'),
+      button('−', `Zoom arrière (${modKey}−)`, 'out'),
+      value,
+      button('+', `Zoom avant (${modKey}+)`, 'in'),
+    );
+    return row;
+  }
+
   showViewMenu(tab: Tab, anchor: HTMLElement): void {
     if (!tab.file) return;
     const path = tab.file.path;
@@ -518,6 +564,8 @@ export class Workspace implements TabHost {
         onClick: () => void tab.toggleMode(),
       })
       .addItem({ title: 'Rechercher dans le document', icon: 'search', onClick: () => tab.find() })
+      .addSeparator()
+      .addCustom(this.zoomRow())
       .addSeparator()
       .addItem({ title: 'Copier le chemin du fichier', icon: 'copy', onClick: () => void copyText(path).then(() => notice('Chemin copié', 1500)) })
       .addItem({ title: "Afficher dans l'explorateur système", icon: 'external-link', onClick: () => this.revealInSystem(path) })
@@ -690,6 +738,8 @@ export class Workspace implements TabHost {
           e.stopPropagation();
           fn();
         };
+        const zoom = zoomKey(e);
+        if (zoom) return run(() => this.zoom.run(zoom, 'key'));
         if (e.shiftKey) {
           if (key === 't') {
             run(() => {

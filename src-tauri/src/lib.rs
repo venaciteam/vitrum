@@ -145,8 +145,9 @@ fn create_main_window(app: &AppHandle) -> tauri::Result<()> {
         .title("Vitrum")
         .inner_size(1200.0, 800.0)
         .min_inner_size(520.0, 380.0)
-        .visible(false)
-        .zoom_hotkeys_enabled(true);
+        .visible(false);
+    // Pas de zoom du moteur d'affichage (toute l'interface, non mémorisé) :
+    // l'interface zoome elle-même le contenu des notes (src/zoom.ts).
     // Windows : barre de titre dessinée par l'interface (onglets dans la barre).
     #[cfg(windows)]
     let builder = builder.decorations(false).shadow(true);
@@ -172,7 +173,7 @@ fn create_main_window(app: &AppHandle) -> tauri::Result<()> {
 /// (Compilé partout pour vérifier l'API, utilisé seulement sur Mac.)
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 fn mac_menu(app: &AppHandle) -> tauri::Result<tauri::menu::Menu<tauri::Wry>> {
-    use tauri::menu::{Menu, PredefinedMenuItem as P, Submenu};
+    use tauri::menu::{Menu, MenuItem, PredefinedMenuItem as P, Submenu};
     let app_menu = Submenu::with_items(
         app,
         "Vitrum",
@@ -203,13 +204,24 @@ fn mac_menu(app: &AppHandle) -> tauri::Result<tauri::menu::Menu<tauri::Wry>> {
             &P::select_all(app, Some("Tout sélectionner"))?,
         ],
     )?;
+    // Zoom du contenu : l'interface reçoit l'événement « zoom » (voir run()).
+    let view = Submenu::with_items(
+        app,
+        "Présentation",
+        true,
+        &[
+            &MenuItem::with_id(app, "zoom-reset", "Taille réelle", true, Some("CmdOrCtrl+0"))?,
+            &MenuItem::with_id(app, "zoom-in", "Zoom avant", true, Some("CmdOrCtrl+="))?,
+            &MenuItem::with_id(app, "zoom-out", "Zoom arrière", true, Some("CmdOrCtrl+-"))?,
+        ],
+    )?;
     let window = Submenu::with_items(
         app,
         "Fenêtre",
         true,
         &[&P::minimize(app, Some("Réduire"))?, &P::fullscreen(app, Some("Plein écran"))?],
     )?;
-    Menu::with_items(app, &[&app_menu, &edit, &window])
+    Menu::with_items(app, &[&app_menu, &edit, &view, &window])
 }
 
 pub fn run() {
@@ -229,6 +241,12 @@ pub fn run() {
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
                 .build(),
         )
+        .on_menu_event(|app, event| {
+            let id = event.id().as_ref();
+            if id.starts_with("zoom-") {
+                let _ = app.emit("zoom", id);
+            }
+        })
         .manage(AppState::default())
         .register_asynchronous_uri_scheme_protocol(media::SCHEME, |_ctx, request, responder| {
             std::thread::spawn(move || responder.respond(media::handle(&request)));

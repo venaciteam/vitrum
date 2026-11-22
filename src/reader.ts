@@ -195,14 +195,84 @@ export function elementForLine(root: HTMLElement, line: number): HTMLElement | n
   return best;
 }
 
-/** Ligne du source affichée en haut de la vue de lecture. */
-export function topLine(root: HTMLElement, scroller: HTMLElement): number {
-  const top = scroller.getBoundingClientRect().top;
-  for (const node of Array.from(root.querySelectorAll<HTMLElement>('[data-sourcepos]'))) {
-    const r = node.getBoundingClientRect();
-    if (r.height > 0 && r.bottom > top + 4) return Number(node.dataset.sourcepos?.split(':')[0]) || 1;
+// --- Correspondance position à l'écran ↔ ligne du source ---
+// Une « ligne » est fractionnaire : 12.5 = à mi-hauteur de la ligne 12. Chaque
+// bloc rendu couvre les lignes [début, fin + 1[ de son attribut data-sourcepos,
+// réparties sur sa hauteur.
+
+const INLINE_TAGS = new Set(['A', 'EM', 'STRONG', 'CODE', 'SPAN', 'DEL', 'S', 'MARK', 'IMG', 'SUP', 'SUB', 'U', 'KBD', 'BR', 'INPUT']);
+
+interface Block {
+  start: number;
+  end: number;
+  rect: DOMRect;
+}
+
+function blocks(root: HTMLElement): Block[] {
+  const out: Block[] = [];
+  root.querySelectorAll<HTMLElement>('[data-sourcepos]').forEach((node) => {
+    if (INLINE_TAGS.has(node.tagName)) return;
+    const m = /^(\d+):\d+-(\d+):(\d+)/.exec(node.dataset.sourcepos ?? '');
+    if (!m) return;
+    const rect = node.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    const start = Number(m[1]);
+    // « 40:0 » : le bloc s'arrête au tout début de la ligne 40 (ligne vide après une liste).
+    const end = Number(m[3]) === 0 ? Number(m[2]) - 1 : Number(m[2]);
+    out.push({ start, end: Math.max(start, end), rect });
+  });
+  return out;
+}
+
+/** Plus petit bloc qui contient le critère ; à égalité, le plus imbriqué (le dernier). */
+function narrowest(list: Block[], keep: (b: Block) => boolean): Block | null {
+  let best: Block | null = null;
+  for (const b of list) {
+    if (keep(b) && (!best || b.end - b.start <= best.end - best.start)) best = b;
   }
-  return 1;
+  return best;
+}
+
+/**
+ * Ligne du source affichée à la hauteur `y` (coordonnées de la fenêtre). Entre
+ * deux blocs (marges), le repère devient le haut du bloc suivant : c'est lui
+ * qu'on a sous les yeux, et c'est lui qu'il faut garder à sa place.
+ */
+export function lineAtY(root: HTMLElement, y: number): { line: number; y: number } {
+  const list = blocks(root);
+  const hit = narrowest(list, (b) => b.rect.top <= y && y < b.rect.bottom);
+  if (hit) return { line: hit.start + ((y - hit.rect.top) / hit.rect.height) * (hit.end - hit.start + 1), y };
+  let next: Block | null = null;
+  let prev: Block | null = null;
+  for (const b of list) {
+    if (b.rect.top > y && (!next || b.rect.top < next.rect.top || (b.rect.top === next.rect.top && b.end - b.start < next.end - next.start))) next = b;
+    if (b.rect.bottom <= y && (!prev || b.rect.bottom > prev.rect.bottom)) prev = b;
+  }
+  if (next) return { line: next.start, y: next.rect.top };
+  if (prev) return { line: prev.end + 1, y: prev.rect.bottom };
+  return { line: 1, y };
+}
+
+/** Hauteur (coordonnées de la fenêtre) où s'affiche la ligne `line` du source. */
+export function yForLine(root: HTMLElement, line: number): number | null {
+  const list = blocks(root);
+  const n = Math.floor(line);
+  const hit = narrowest(list, (b) => b.start <= n && n <= b.end);
+  if (hit) return hit.rect.top + ((line - hit.start) / (hit.end - hit.start + 1)) * hit.rect.height;
+  let prev: Block | null = null;
+  let next: Block | null = null;
+  for (const b of list) {
+    if (b.end < n && (!prev || b.end > prev.end || (b.end === prev.end && b.rect.bottom > prev.rect.bottom))) prev = b;
+    if (b.start > n && (!next || b.start < next.start || (b.start === next.start && b.rect.top < next.rect.top))) next = b;
+  }
+  if (prev && next) {
+    const from = prev.end + 1;
+    const lines = next.start - from;
+    return prev.rect.bottom + (lines > 0 ? (line - from) / lines : 0) * (next.rect.top - prev.rect.bottom);
+  }
+  if (next) return next.rect.top;
+  if (prev) return prev.rect.bottom;
+  return null;
 }
 
 export function scrollToElement(scroller: HTMLElement, target: Element, margin = 24): void {

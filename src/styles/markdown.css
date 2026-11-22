@@ -447,7 +447,7 @@
   padding-bottom: 0.9em;
   border-bottom: 1px solid var(--background-modifier-border);
   font-family: var(--font-interface);
-  font-size: var(--font-ui-small);
+  font-size: calc(var(--font-ui-small) * var(--content-zoom, 1));
 }
 .metadata-properties-heading {
   margin-bottom: 6px;

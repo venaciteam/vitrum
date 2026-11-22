@@ -50,6 +50,8 @@ import {
   Tags,
   TriangleAlert,
   X,
+  Star,
+  StarOff,
   Zap,
 } from 'lucide';
 
@@ -105,6 +107,8 @@ const ICONS: Record<string, IconNode> = {
   tags: Tags,
   'triangle-alert': TriangleAlert,
   x: X,
+  star: Star,
+  'star-off': StarOff,
   zap: Zap,
 };
 

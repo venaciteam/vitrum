@@ -3,6 +3,7 @@
 import { api, errorMessage, type DirEntry } from './api';
 import { setIcon } from './icons';
 import { basename, dirname, isInside, samePath, stem } from './paths';
+import { saveSession, session } from './settings';
 import { el, iconButton, Menu } from './ui';
 
 export interface ExplorerHost {
@@ -19,6 +20,7 @@ export class Explorer {
   pinned = false;
   private titleEl: HTMLElement;
   private tree: HTMLElement;
+  private favoritesEl: HTMLElement;
   private expanded = new Set<string>();
   private activePath: string | null = null;
 
@@ -36,9 +38,75 @@ export class Explorer {
       }),
     );
     header.append(this.titleEl, buttons);
+    this.titleEl.addEventListener('contextmenu', (e) => {
+      if (!this.root) return;
+      const root = this.root;
+      this.folderMenu(root).showAtMouse(e);
+    });
+    this.favoritesEl = el('div', 'nav-favorites');
     this.tree = el('div', 'nav-files-container');
-    this.dom.append(header, this.tree);
+    this.dom.append(this.favoritesEl, header, this.tree);
+    this.renderFavorites();
     this.render();
+  }
+
+  // --- Favoris ---
+
+  isFavorite(path: string): boolean {
+    return session.favorites.some((f) => samePath(f, path));
+  }
+
+  toggleFavorite(path: string): void {
+    if (this.isFavorite(path)) session.favorites = session.favorites.filter((f) => !samePath(f, path));
+    else session.favorites = [...session.favorites, path];
+    saveSession();
+    this.renderFavorites();
+  }
+
+  private renderFavorites(): void {
+    const list = session.favorites;
+    this.favoritesEl.replaceChildren();
+    this.favoritesEl.classList.toggle('is-hidden', !list.length);
+    if (!list.length) return;
+    this.favoritesEl.append(el('div', 'nav-section-title', 'Favoris'));
+    for (const path of list) {
+      const self = el('div', 'tree-item-self is-clickable nav-favorite');
+      self.dataset.path = path;
+      self.title = path;
+      const ic = el('div', 'tree-item-icon');
+      setIcon(ic, 'star', 14);
+      self.append(ic, el('div', 'tree-item-inner', basename(path) || path));
+      if (this.root && samePath(path, this.root)) self.classList.add('is-active');
+      self.addEventListener('click', () => {
+        if (self.classList.contains('is-missing')) return;
+        this.setRoot(path, true);
+      });
+      self.addEventListener('contextmenu', (e) => this.folderMenu(path).showAtMouse(e));
+      this.favoritesEl.append(self);
+      // Dossier déplacé ou supprimé : grisé, mais gardé dans la liste.
+      void api.listDir(path).catch(() => {
+        self.classList.add('is-missing');
+        self.title = `${path} : dossier introuvable (déplacé, renommé ou supprimé)`;
+      });
+    }
+  }
+
+  /** Menu d'un dossier (arborescence, titre du panneau ou favori). */
+  private folderMenu(path: string): Menu {
+    const fav = this.isFavorite(path);
+    const m = new Menu();
+    if (!this.root || !samePath(path, this.root)) {
+      m.addItem({ title: 'Afficher ce dossier ici', icon: 'folder-open', onClick: () => this.setRoot(path, true) });
+    }
+    m.addItem({
+      title: fav ? 'Retirer des favoris' : 'Ajouter aux favoris',
+      icon: fav ? 'star-off' : 'star',
+      onClick: () => this.toggleFavorite(path),
+    });
+    m.addSeparator();
+    m.addItem({ title: "Ouvrir dans l'explorateur système", icon: 'external-link', onClick: () => this.host.revealInSystem(path) });
+    m.addItem({ title: 'Copier le chemin', icon: 'copy', onClick: () => this.host.copyPath(path) });
+    return m;
   }
 
   /** La note active a changé : suit son dossier si nécessaire. */
@@ -81,6 +149,9 @@ export class Explorer {
   }
 
   private render(): void {
+    this.favoritesEl.querySelectorAll<HTMLElement>('.nav-favorite').forEach((node) =>
+      node.classList.toggle('is-active', !!this.root && samePath(node.dataset.path ?? '', this.root)),
+    );
     this.titleEl.textContent = this.root ? basename(this.root) : 'Fichiers';
     this.titleEl.title = this.root ?? '';
     this.tree.replaceChildren();
@@ -127,13 +198,7 @@ export class Explorer {
         }
       };
       self.addEventListener('click', () => void toggle());
-      self.addEventListener('contextmenu', (e) =>
-        new Menu()
-          .addItem({ title: 'Afficher ce dossier ici', icon: 'folder-open', onClick: () => this.setRoot(entry.path, true) })
-          .addItem({ title: "Ouvrir dans l'explorateur système", icon: 'external-link', onClick: () => this.host.revealInSystem(entry.path) })
-          .addItem({ title: 'Copier le chemin', icon: 'copy', onClick: () => this.host.copyPath(entry.path) })
-          .showAtMouse(e),
-      );
+      self.addEventListener('contextmenu', (e) => this.folderMenu(entry.path).showAtMouse(e));
       wrap.append(self, children);
       if (this.expanded.has(key)) void toggle();
     } else {

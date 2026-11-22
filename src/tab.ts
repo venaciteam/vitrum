@@ -7,15 +7,16 @@ import {
   openSearch,
   refreshSpellcheck,
   resetEditor,
+  editorLineAtY,
+  scrollEditorLineTo,
   scrollToLine as editorScrollToLine,
   setReadonly,
-  topVisibleLine,
 } from './editor';
 import { FindBar } from './find';
 import { setIcon } from './icons';
 import { headingsOf } from './outline';
 import { basename, dirname, stem } from './paths';
-import { elementForLine, enhance, findHeading, scrollToElement, topLine } from './reader';
+import { elementForLine, enhance, findHeading, lineAtY, scrollToElement, yForLine } from './reader';
 import { settings, type Mode } from './settings';
 import { el, notice } from './ui';
 
@@ -30,6 +31,18 @@ export interface TabHost {
 }
 
 let nextId = 1;
+
+/**
+ * Ce qui est affiché à une hauteur donnée de la vue : la ligne du source
+ * (fractionnaire) et sa distance au haut de la zone de défilement. Sert à
+ * garder le même texte sous les yeux en changeant de mode ou de zoom.
+ */
+export interface ScrollAnchor {
+  line: number;
+  offset: number;
+  /** Vue tout en haut : y rester. */
+  atTop: boolean;
+}
 
 const AUTOSAVE_DELAY = 1000;
 
@@ -205,7 +218,7 @@ export class Tab {
     this.mode = mode;
     this.readerScroll.scrollTop = 0;
     this.sourceScroll.scrollTop = 0;
-    void this.showMode(1);
+    void this.showMode(null);
   }
 
   setEmpty(): void {
@@ -238,35 +251,108 @@ export class Tab {
 
   async setMode(mode: Mode): Promise<void> {
     if (!this.file || mode === this.mode) return;
-    const line =
-      this.mode === 'preview'
-        ? topLine(this.rendered, this.readerScroll)
-        : this.editor
-          ? topVisibleLine(this.editor, this.sourceScroll)
-          : 1;
+    const anchor = this.captureAnchor();
     this.mode = mode;
     if (mode === 'preview') void this.save();
-    await this.showMode(line);
+    await this.showMode(anchor);
     if (mode === 'source') this.editor?.focus();
   }
 
-  private async showMode(line: number): Promise<void> {
+  private async showMode(anchor: ScrollAnchor | null): Promise<void> {
     if (this.mode === 'source') {
       this.findBar.close();
-      const editor = this.ensureEditor();
+      this.ensureEditor();
       this.showPane('source');
-      editor.requestMeasure();
-      if (line > 1) requestAnimationFrame(() => editorScrollToLine(editor, line));
     } else {
       if (this.renderedText !== this.currentText()) await this.render();
       this.showPane('preview');
-      if (line > 1) {
-        const target = elementForLine(this.rendered, line);
-        if (target) scrollToElement(this.readerScroll, target);
-      }
     }
+    if (anchor) this.restoreAnchor(anchor, true);
     this.updateHeader();
     this.host.onTabChanged(this);
+  }
+
+  // --- Position de lecture ---
+
+  private get scroller(): HTMLElement {
+    return this.mode === 'source' ? this.sourceScroll : this.readerScroll;
+  }
+
+  /** Texte affiché à la hauteur `y` de la fenêtre (par défaut : en haut de la vue). */
+  captureAnchor(y?: number): ScrollAnchor | null {
+    if (!this.file) return null;
+    const scroller = this.scroller;
+    const top = scroller.getBoundingClientRect().top;
+    const at = y ?? top;
+    const atTop = scroller.scrollTop < 1 && y === undefined;
+    if (this.mode === 'source') {
+      if (!this.editor) return null;
+      return { line: editorLineAtY(this.editor, at), offset: at - top, atTop };
+    }
+    const hit = lineAtY(this.rendered, at);
+    return { line: hit.line, offset: hit.y - top, atTop };
+  }
+
+  /** Remet le texte de `anchor` à la même hauteur, dans le mode courant. */
+  restoreAnchor(anchor: ScrollAnchor, justShown = false): void {
+    this.stopSettling?.();
+    if (this.mode === 'source') {
+      const editor = this.editor;
+      if (!editor) return;
+      editor.requestMeasure();
+      const apply = () => {
+        if (anchor.atTop) this.sourceScroll.scrollTop = 0;
+        else scrollEditorLineTo(editor, this.sourceScroll, anchor.line, anchor.offset);
+      };
+      // Éditeur qui vient d'être affiché : il se mesure d'abord.
+      if (justShown) requestAnimationFrame(apply);
+      else apply();
+      return;
+    }
+    const apply = () => {
+      if (anchor.atTop) {
+        this.readerScroll.scrollTop = 0;
+        return;
+      }
+      const y = yForLine(this.rendered, anchor.line);
+      if (y === null) return;
+      const top = this.readerScroll.getBoundingClientRect().top;
+      this.readerScroll.scrollTop += y - (top + anchor.offset);
+    };
+    apply();
+    this.settle(apply);
+  }
+
+  private stopSettling: (() => void) | null = null;
+
+  /**
+   * Images et diagrammes peuvent finir de s'afficher juste après : on recale
+   * pendant un court instant, sauf dès que la vue défile pour une autre raison
+   * (molette, barre de défilement, sommaire…).
+   */
+  private settle(apply: () => void): void {
+    const scroller = this.readerScroll;
+    let expected = scroller.scrollTop;
+    const reapply = () => {
+      apply();
+      expected = scroller.scrollTop;
+    };
+    const onScroll = () => {
+      if (Math.abs(scroller.scrollTop - expected) > 2) stop();
+    };
+    const observer = new ResizeObserver(() => {
+      if (!scroller.classList.contains('is-hidden')) reapply();
+    });
+    observer.observe(this.rendered);
+    const stop = () => {
+      observer.disconnect();
+      clearTimeout(timer);
+      scroller.removeEventListener('scroll', onScroll);
+      if (this.stopSettling === stop) this.stopSettling = null;
+    };
+    const timer = window.setTimeout(stop, 1500);
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    this.stopSettling = stop;
   }
 
   private showPane(pane: 'preview' | 'source' | 'empty'): void {

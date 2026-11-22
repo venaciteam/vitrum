@@ -28,7 +28,13 @@ Vitrum n'est pas signé : message du système au premier lancement, voir [Window
   commentaires `%%…%%` masqués).
 - **Mode édition** : Markdown brut coloré (CodeMirror, comme Obsidian), enregistrement
   automatique après une seconde (désactivable). `Ctrl+E` bascule entre les deux modes en
-  gardant la position dans le texte.
+  gardant sous les yeux le texte qu'on lisait.
+- **Zoom du contenu** (le texte de la note, pas l'interface) : `Ctrl` + `+` / `-` / `0`, Ctrl +
+  molette, pincement du trackpad ou du pavé tactile, menu « … » de l'onglet, et menu
+  « Présentation » sur Mac. Le pourcentage est retenu et s'affiche dans la barre d'état.
+- **Dossiers favoris** : clic droit sur un dossier du panneau de fichiers, « Ajouter aux
+  favoris ». Ils restent en haut du panneau d'un lancement à l'autre (liste propre à chaque
+  machine).
 - Onglets, explorateur du dossier de la note, plan du document, recherche (`Ctrl+F`),
   thème clair/sombre, glisser-déposer de fichiers sur la fenêtre.
 - Un fichier modifié par une autre application est rechargé ; s'il a aussi des modifications
@@ -50,7 +56,7 @@ Vitrum n'est pas signé : message du système au premier lancement, voir [Window
 | Onglet suivant / précédent | `Ctrl+Tab` / `Ctrl+Maj+Tab` | idem |
 | Rouvrir le dernier onglet fermé | `Ctrl+Maj+T` | `⌘⇧T` |
 | Paramètres | `Ctrl+,` | `⌘,` |
-| Zoom | `Ctrl+` `+` / `-` / `0` | `⌘` `+` / `-` / `0` |
+| Zoom avant / arrière / 100 % | `Ctrl` + `+` / `-` / `0`, ou Ctrl + molette | `⌘` + `+` / `-` / `0`, ou pincement |
 
 Dans la vue de lecture, `Ctrl+clic` (ou clic molette) ouvre un lien dans un nouvel onglet.
 
@@ -149,6 +155,9 @@ récent.
 
 2. Essai sur chaque machine, sans rien envoyer : `scripts/publier.sh --essai` (Mac),
    `.\scripts\publier.ps1 -Essai` (PC). Le fichier produit est indiqué à la fin.
+   Plus simple : double-cliquer sur `Fabriquer Vitrum (Mac).command` ou `Fabriquer Vitrum (PC).cmd`,
+   à la racine du dépôt. Ils demandent « 1 = essai » ou « 2 = envoyer sur GitHub » (étape 3), puis
+   ouvrent le dossier du fichier produit.
 3. Publication : `scripts/publier.sh` sur le Mac, `.\scripts\publier.ps1` sur le PC, dans n'importe quel
    ordre. Le premier crée la version `vX.Y.Z` en **brouillon** (notes en français avec
    `--notes notes.md` / `-Notes notes.md`) et y dépose son fichier ; le second y ajoute le sien et

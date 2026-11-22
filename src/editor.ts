@@ -232,11 +232,38 @@ export function applyDiskText(view: EditorView, text: string): void {
 }
 
 /** Première ligne visible dans le conteneur qui fait défiler l'éditeur. */
-export function topVisibleLine(view: EditorView, scroller: HTMLElement): number {
-  const offset = scroller.getBoundingClientRect().top - view.documentTop;
-  if (offset <= 0) return 1;
-  const block = view.lineBlockAtHeight(offset);
-  return view.state.doc.lineAt(block.from).number;
+/** Ligne (fractionnaire, comme dans reader.ts) affichée à la hauteur `y` de la fenêtre. */
+export function editorLineAtY(view: EditorView, y: number): number {
+  const height = y - view.documentTop;
+  if (height <= 0) return 1;
+  const block = view.lineBlockAtHeight(height);
+  const line = view.state.doc.lineAt(block.from);
+  const frac = block.height > 0 ? (height - block.top) / block.height : 0;
+  return line.number + Math.max(0, Math.min(0.999, frac));
+}
+
+/**
+ * Fait défiler `scroller` pour que la ligne `line` (fractionnaire) arrive à
+ * `offset` pixels de son haut. CodeMirror amène d'abord la ligne à l'écran (il
+ * mesure alors sa vraie hauteur), puis on corrige au pixel près.
+ */
+export function scrollEditorLineTo(view: EditorView, scroller: HTMLElement, line: number, offset: number): void {
+  const doc = view.state.doc;
+  const n = Math.max(1, Math.min(Math.floor(line), doc.lines));
+  const from = doc.line(n).from;
+  const frac = n === Math.floor(line) ? line - n : 0;
+  view.dispatch({ effects: EditorView.scrollIntoView(from, { y: 'start', yMargin: offset }) });
+  const fix = {
+    read: (v: EditorView) => {
+      const block = v.lineBlockAt(from);
+      return v.documentTop + block.top + frac * block.height - (scroller.getBoundingClientRect().top + offset);
+    },
+    write: (delta: number) => {
+      if (Math.abs(delta) > 0.5) scroller.scrollTop += delta;
+    },
+  };
+  view.requestMeasure(fix);
+  requestAnimationFrame(() => view.requestMeasure(fix));
 }
 
 export function scrollToLine(view: EditorView, line: number, select = false): void {
