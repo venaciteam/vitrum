@@ -71,6 +71,8 @@ export class Tab {
   private modeBtn: HTMLButtonElement;
   private banner: HTMLElement;
   private readerScroll: HTMLElement;
+  private readerSizer: HTMLElement;
+  private sourceSizer: HTMLElement;
   private readerTitle: HTMLElement;
   private rendered: HTMLElement;
   private sourceScroll: HTMLElement;
@@ -129,7 +131,7 @@ export class Tab {
     const content = el('div', 'view-content');
 
     this.readerScroll = el('div', 'markdown-reading-view');
-    const readerSizer = el('div', 'markdown-preview-sizer');
+    const readerSizer = (this.readerSizer = el('div', 'markdown-preview-sizer'));
     this.readerTitle = el('div', 'inline-title');
     this.rendered = el('div', 'markdown-rendered');
     readerSizer.append(this.readerTitle, this.rendered);
@@ -138,7 +140,7 @@ export class Tab {
     this.rendered.addEventListener('auxclick', (e) => e.button === 1 && this.onReaderClick(e));
 
     this.sourceScroll = el('div', 'markdown-source-view');
-    const sourceSizer = el('div', 'markdown-source-sizer');
+    const sourceSizer = (this.sourceSizer = el('div', 'markdown-source-sizer'));
     this.sourceTitle = el('div', 'inline-title');
     this.cmHost = el('div', 'cm-host');
     sourceSizer.append(this.sourceTitle, this.cmHost);
@@ -160,6 +162,9 @@ export class Tab {
     );
     content.append(this.findBar.dom, this.readerScroll, this.sourceScroll, this.emptyEl);
     this.dom.append(header, this.banner, content);
+    const fit = new ResizeObserver(() => this.fitZoom());
+    fit.observe(readerSizer);
+    fit.observe(sourceSizer);
     this.showPane('empty');
     this.updateHeader();
   }
@@ -267,9 +272,21 @@ export class Tab {
       if (this.renderedText !== this.currentText()) await this.render();
       this.showPane('preview');
     }
+    this.fitZoom();
     if (anchor) this.restoreAnchor(anchor, true);
     this.updateHeader();
     this.host.onTabChanged(this);
+  }
+
+  /**
+   * Zoom sous 100 % : la note agrandie « comme une image » garde sa hauteur de mise en page, ce
+   * qui laisserait du vide à faire défiler sous le texte. Une marge négative le retire.
+   */
+  fitZoom(): void {
+    const z = settings.zoom;
+    for (const sizer of [this.readerSizer, this.sourceSizer]) {
+      sizer.style.marginBottom = z < 1 ? `${-(1 - z) * sizer.offsetHeight}px` : '';
+    }
   }
 
   // --- Position de lecture ---
@@ -401,6 +418,7 @@ export class Tab {
     }
     const top = this.readerScroll.scrollTop;
     await this.render();
+    this.fitZoom();
     this.readerScroll.scrollTop = top;
   }
 

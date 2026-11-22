@@ -232,20 +232,32 @@ export function applyDiskText(view: EditorView, text: string): void {
 }
 
 /** Première ligne visible dans le conteneur qui fait défiler l'éditeur. */
-/** Ligne (fractionnaire, comme dans reader.ts) affichée à la hauteur `y` de la fenêtre. */
+/** Rectangle à l'écran de la ligne qui commence à `pos`, si elle est affichée. */
+function lineRect(view: EditorView, pos: number): DOMRect | null {
+  const { node } = view.domAtPos(pos);
+  const elem = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+  const line = elem?.closest('.cm-line');
+  return line ? line.getBoundingClientRect() : null;
+}
+
+/**
+ * Ligne (fractionnaire, comme dans reader.ts) affichée à la hauteur `y` de la fenêtre. Tout se
+ * mesure à l'écran : les calculs restent justes quand la note est agrandie par le zoom.
+ */
 export function editorLineAtY(view: EditorView, y: number): number {
-  const height = y - view.documentTop;
-  if (height <= 0) return 1;
-  const block = view.lineBlockAtHeight(height);
-  const line = view.state.doc.lineAt(block.from);
-  const frac = block.height > 0 ? (height - block.top) / block.height : 0;
+  const content = view.contentDOM.getBoundingClientRect();
+  if (y <= content.top) return 1;
+  const pos = view.posAtCoords({ x: content.left + 4, y }, false);
+  const line = view.state.doc.lineAt(pos);
+  const r = lineRect(view, line.from);
+  const frac = r && r.height > 0 ? (y - r.top) / r.height : 0;
   return line.number + Math.max(0, Math.min(0.999, frac));
 }
 
 /**
- * Fait défiler `scroller` pour que la ligne `line` (fractionnaire) arrive à
- * `offset` pixels de son haut. CodeMirror amène d'abord la ligne à l'écran (il
- * mesure alors sa vraie hauteur), puis on corrige au pixel près.
+ * Fait défiler `scroller` pour que la ligne `line` (fractionnaire) arrive à `offset` pixels
+ * de son haut. CodeMirror amène d'abord la ligne à l'écran, puis on corrige au pixel près
+ * d'après sa position réelle.
  */
 export function scrollEditorLineTo(view: EditorView, scroller: HTMLElement, line: number, offset: number): void {
   const doc = view.state.doc;
@@ -255,8 +267,8 @@ export function scrollEditorLineTo(view: EditorView, scroller: HTMLElement, line
   view.dispatch({ effects: EditorView.scrollIntoView(from, { y: 'start', yMargin: offset }) });
   const fix = {
     read: (v: EditorView) => {
-      const block = v.lineBlockAt(from);
-      return v.documentTop + block.top + frac * block.height - (scroller.getBoundingClientRect().top + offset);
+      const r = lineRect(v, from);
+      return r ? r.top + frac * r.height - (scroller.getBoundingClientRect().top + offset) : 0;
     },
     write: (delta: number) => {
       if (Math.abs(delta) > 0.5) scroller.scrollTop += delta;

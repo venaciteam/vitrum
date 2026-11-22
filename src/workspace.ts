@@ -522,6 +522,7 @@ export class Workspace implements TabHost, ZoomTarget {
     const tab = this.active;
     const anchor = tab?.captureAnchor(y) ?? null;
     change();
+    this.tabs.forEach((t) => t.fitZoom());
     if (tab && anchor) tab.restoreAnchor(anchor);
   }
 

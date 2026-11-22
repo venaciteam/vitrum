@@ -117,12 +117,10 @@ export const ZOOM_MAX = 3;
 export const ZOOM_STEPS = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
 function applyZoom(): void {
-  const z = settings.zoom;
   const style = document.body.style;
-  style.setProperty('--font-text-size', `${settings.fontSize * z}px`);
-  // La largeur de lecture grandit avec le texte : même mise en page, en plus gros.
-  style.setProperty('--file-line-width', `${Math.round(700 * z)}px`);
-  style.setProperty('--content-zoom', String(z));
+  style.setProperty('--font-text-size', `${settings.fontSize}px`);
+  // Agrandissement de la note entière (voir .markdown-preview-sizer dans layout.css).
+  style.setProperty('--content-zoom', String(settings.zoom));
 }
 
 let zoomStoreTimer = 0;

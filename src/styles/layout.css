@@ -502,11 +502,20 @@ body.is-resizing {
   overflow-y: auto;
   scroll-behavior: auto;
 }
+/* Zoom du contenu (src/zoom.ts) : la note est mise en page à sa taille normale puis agrandie
+   comme une image. Les retours à la ligne restent donc les mêmes à tous les niveaux de zoom (la
+   police système du Mac ne grandit pas exactement en proportion de sa taille). La largeur est
+   divisée par le zoom pour que, agrandie, la note occupe la même place qu'à 100 %. */
 .markdown-preview-sizer,
 .markdown-source-sizer {
-  margin: 0 auto;
+  position: relative;
+  left: 50%;
+  width: calc(100% / var(--content-zoom, 1));
+  margin: 0;
   padding: 0 var(--file-margins) 40vh;
   font-size: var(--font-text-size);
+  transform: translateX(-50%) scale(var(--content-zoom, 1));
+  transform-origin: top center;
 }
 .readable-line-length .markdown-preview-sizer,
 .readable-line-length .markdown-source-sizer {
