@@ -52,12 +52,12 @@ export class Workspace implements TabHost, ZoomTarget, UpdateHost {
 
   async start(): Promise<void> {
     applyAppearance();
+    this.updater = new Updater(this);
     this.buildChrome();
     this.layout();
     this.zoom = new ZoomController(this);
     this.zoom.onChange(() => this.updateStatus());
     this.bindKeys();
-    this.updater = new Updater(this);
     if (isTauri) {
       this.bindWindow();
       await this.listenBackend();
@@ -431,7 +431,7 @@ export class Workspace implements TabHost, ZoomTarget, UpdateHost {
     );
     const bottom = el('div', 'side-dock-settings');
     const themeBtn = iconButton('sun', 'Thème', (e) => this.themeMenu().showBelow(e.currentTarget as HTMLElement));
-    bottom.append(themeBtn, iconButton('settings', `Paramètres (${modKey},)`, () => this.openSettings()));
+    bottom.append(this.updater.button, themeBtn, iconButton('settings', `Paramètres (${modKey},)`, () => this.openSettings()));
     ribbon.append(top, bottom);
     onSettingsChange(() => setIcon(themeBtn, document.body.classList.contains('theme-dark') ? 'moon' : 'sun'));
     setIcon(themeBtn, document.body.classList.contains('theme-dark') ? 'moon' : 'sun');
@@ -633,7 +633,7 @@ export class Workspace implements TabHost, ZoomTarget, UpdateHost {
   }
 
   private openSettings(): void {
-    openModal('Paramètres', (content) => {
+    openModal('Paramètres', (content, closeSettings) => {
       const section = (title: string) => content.append(el('div', 'setting-heading', title));
       section('Apparence');
       content.append(
@@ -693,15 +693,13 @@ export class Workspace implements TabHost, ZoomTarget, UpdateHost {
       void this.fillDefaultAppRow(defaultRow);
 
       section('Mises à jour');
-      const checkNow = el('button', '', 'Rechercher maintenant');
-      checkNow.addEventListener('click', () => void this.updater.check(true));
       content.append(
         settingRow(
           'Rechercher les mises à jour',
-          'Au lancement puis toutes les six heures. Une nouvelle version est proposée, jamais installée sans votre accord.',
+          'Au lancement puis toutes les six heures. Une nouvelle version est signalée dans la barre de gauche, jamais installée sans votre accord.',
           toggle(settings.checkUpdates, (v) => updateSettings({ checkUpdates: v })),
         ),
-        settingRow('Vérifier tout de suite', '', checkNow),
+        this.updater.settingsRow(settingRow, closeSettings),
       );
 
       const about = el('div', 'setting-about', 'Vitrum');

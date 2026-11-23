@@ -75,9 +75,12 @@ Dans la vue de lecture, `Ctrl+clic` (ou clic molette) ouvre un lien dans un nouv
 
 ## Mises à jour
 
-Depuis la version 0.3.0, Vitrum vérifie lui-même s'il existe une nouvelle version (au lancement, puis toutes les six heures). Quand c'est le cas, une carte apparaît en bas à droite : « Nouveautés » ouvre la page de la version, « Installer et redémarrer » enregistre vos notes, télécharge la mise à jour, vérifie sa signature, l'installe et relance Vitrum. Rien ne s'installe sans votre accord.
+Depuis la version 0.3.0, Vitrum vérifie lui-même s'il existe une nouvelle version (au lancement, puis toutes les six heures). Quand c'est le cas, une icône apparaît dans la barre de gauche, au-dessus du thème et des paramètres. Un clic dessus propose :
+- **Installer et redémarrer** : vos notes sont enregistrées, la mise à jour est téléchargée, sa signature vérifiée, puis Vitrum l'installe et redémarre ;
+- **Voir les nouveautés** : la page de la version sur GitHub ;
+- **Ignorer cette version** : l'icône disparaît et ne revient pas pour cette version ; elle reste installable depuis les Paramètres.
 
-Dans les Paramètres, « Mises à jour » permet de couper la vérification automatique ou de vérifier tout de suite. Sur Mac, le menu **Vitrum** › **Rechercher les mises à jour…** fait de même.
+Rien ne s'installe sans votre accord. Dans les Paramètres, « Mises à jour » permet de couper la vérification automatique, de vérifier tout de suite ou d'installer une version ignorée. Sur Mac, le menu **Vitrum** › **Rechercher les mises à jour…** fait de même.
 
 Avant la 0.3.0 : télécharger la nouvelle version et l'installer par-dessus l'ancienne (sur Mac, remplacer Vitrum dans **Applications**). Les réglages, les favoris et les onglets ouverts sont conservés.
 

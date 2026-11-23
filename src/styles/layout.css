@@ -1054,80 +1054,55 @@ select.dropdown {
   text-decoration: line-through;
 }
 
-/* --- Mise à jour disponible (coin inférieur droit, au-dessus de la barre d'état) --- */
-.update-card {
-  position: fixed;
-  right: 16px;
-  bottom: 36px;
-  z-index: 300;
-  width: max-content;
-  min-width: 300px;
-  max-width: calc(100vw - 32px);
-  padding: 14px 16px;
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border-hover);
-  border-radius: var(--radius-m);
-  box-shadow: var(--shadow-s);
-  color: var(--text-normal);
-  font-size: var(--font-ui-small);
-  line-height: 1.4;
-  animation: notice-in 0.15s ease-out;
-}
-.update-card.is-flashing {
-  animation: update-flash 0.6s ease-out;
-}
-.update-title {
-  font-weight: var(--font-semibold, 600);
-  margin-bottom: 4px;
-}
-.update-text {
-  color: var(--text-muted);
-}
-.update-progress {
+/* --- Mise à jour disponible : icône de la barre de gauche, menu, progression --- */
+.ribbon .ribbon-update[hidden] {
   display: none;
-  height: 4px;
-  margin-top: 10px;
-  overflow: hidden;
-  background: var(--background-modifier-border);
-  border-radius: 2px;
 }
-.update-card.is-installing .update-progress {
-  display: block;
+.ribbon .ribbon-update {
+  position: relative;
+  color: var(--interactive-accent);
 }
-.update-bar {
-  width: 0;
-  height: 100%;
+.ribbon .ribbon-update:hover {
+  color: var(--interactive-accent-hover);
+}
+.ribbon .ribbon-update::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 7px;
+  height: 7px;
   background: var(--interactive-accent);
-  border-radius: 2px;
-  transition: width 0.15s linear;
+  border: 1.5px solid var(--background-secondary);
+  border-radius: 50%;
 }
-.update-bar.is-indeterminate {
-  width: 30%;
-  animation: update-slide 1.1s ease-in-out infinite;
+.ribbon .ribbon-update.is-busy {
+  animation: update-pulse 1.2s ease-in-out infinite;
 }
-.update-buttons button {
-  white-space: nowrap;
-}
-.update-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-.update-card.is-installing .update-buttons {
+.ribbon .ribbon-update.is-busy::after {
   display: none;
 }
-@keyframes update-slide {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(340%);
+@keyframes update-pulse {
+  50% {
+    opacity: 0.4;
   }
 }
-@keyframes update-flash {
-  30% {
-    border-color: var(--interactive-accent);
-    transform: scale(1.02);
-  }
+.menu-update-head {
+  padding: 6px 10px 4px;
+  line-height: 1.4;
+}
+.menu-update-title {
+  color: var(--text-normal);
+  font-weight: 600;
+}
+.menu-update-text {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+.notice.update-status {
+  cursor: default;
+}
+.setting-buttons {
+  display: flex;
+  gap: 8px;
 }

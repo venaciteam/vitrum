@@ -15,6 +15,8 @@ export interface Settings {
   strictLineBreaks: boolean;
   /** Recherche des mises à jour au lancement et toutes les six heures. */
   checkUpdates: boolean;
+  /** Version écartée par « Ignorer cette version » : plus signalée, mais installable depuis les Paramètres. */
+  skippedVersion: string;
   leftOpen: boolean;
   rightOpen: boolean;
   leftWidth: number;
@@ -31,6 +33,7 @@ const DEFAULTS: Settings = {
   spellcheck: false,
   strictLineBreaks: false,
   checkUpdates: true,
+  skippedVersion: '',
   leftOpen: true,
   rightOpen: false,
   leftWidth: 260,
