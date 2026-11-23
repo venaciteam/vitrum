@@ -144,7 +144,7 @@ Vitrum n'installe une mise à jour que si elle est signée par la clé dont la p
 
 - **PC** : chiffrée par Windows pour la session courante, dans `%LOCALAPPDATA%\venacity-build\cles\vitrum-maj.dpapi`. `publier.ps1` la lit.
 - **Mac** : dans le trousseau, service `vitrum-maj`, compte `vitrum`. `publier.sh` la lit.
-- **Copie de secours** : chiffrée par `age` avec une phrase secrète, hors du dépôt.
+- **Copie de secours** : dans un gestionnaire de mots de passe, d'où on la recopie sur une machine neuve.
 
 Perdre la clé ne casse rien, mais les copies déjà installées ne pourront plus se mettre à jour seules : il faudrait une nouvelle clé et une installation à la main. Sans clé, `--essai` / `-Essai` fabrique quand même, sans fichier de mise à jour.
 
