@@ -1,47 +1,39 @@
 # Vitrum
 
-Lecteur et éditeur Markdown à l'interface proche d'Obsidian, pour ouvrir des fichiers `.md`
-**où qu'ils soient** sur le disque, sans les mettre dans un coffre. Windows et macOS.
+**Lire et modifier ses notes Markdown où qu'elles soient, avec le confort d'Obsidian.** Windows et macOS.
+
+Vitrum ouvre n'importe quel fichier `.md` du disque, sans coffre ni import : un double-clic sur la note suffit. Le mode lecture affiche la note comme Obsidian (propriétés, callouts, tâches, formules, diagrammes…), le mode édition montre le Markdown brut coloré et enregistre au fil de l'eau.
 
 *Vitrum* : « verre » en latin, clin d'œil à l'obsidienne, un verre volcanique.
 
+> Projet indépendant, sans lien avec Obsidian.
+
+![Vitrum en mode lecture : panneau des fichiers à gauche, note de démonstration avec ses propriétés, ses liens et ses callouts](docs/captures/lecture.png)
+
+<!-- Liens permanents vers la dernière version : chaque publication doit joindre ces fichiers, avec ces noms exacts (Vitrum-Setup.exe, Vitrum-macOS.dmg). -->
+
 ## Télécharger
 
-Dernière version :
+**Windows 10 et 11** (64 bits) :
 
-- **[Télécharger pour Windows](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe)**
-  (Windows 10 et 11, 64 bits) : l'installateur ajoute Vitrum au menu « Ouvrir avec » et propose
-  d'en faire l'application par défaut des `.md`.
-- **[Télécharger pour Mac](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)**
-  (Mac à puce Apple, M1 et plus récent, macOS 11 ou plus récent) : ouvrir le `.dmg` et glisser
-  Vitrum dans **Applications**. La 0.1.0 est universelle et marche aussi sur les Mac Intel.
+- **[Télécharger l'installateur pour Windows](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe)** : il s'installe sans droits administrateur, ajoute Vitrum au menu « Ouvrir avec » et propose d'en faire l'application par défaut des `.md`.
 
-Le dépôt est privé : les liens marchent une fois connecté à GitHub avec un compte qui y a accès.
-Vitrum n'est pas signé : message du système au premier lancement, voir [Windows](#windows) et
-[macOS](#macos). Toutes les versions : [publications](../../releases).
+**Mac avec puce Apple** (M1 et plus récent, macOS 11 ou plus récent) :
+
+- **[Télécharger Vitrum pour Mac](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)** : ouvrir le `.dmg` et glisser Vitrum dans **Applications**.
+
+Vitrum n'est pas signé : le message du système au premier lancement et les étapes sont dans [Installation](#installation). Toutes les versions : [publications](../../releases).
 
 ## Ce que fait Vitrum
 
-- **Mode lecture** : rendu final comme dans Obsidian (propriétés du front matter, callouts
-  repliables, tableaux, tâches cochables, `==surlignage==`, `#tags`, notes de bas de page,
-  formules `$…$`, diagrammes Mermaid, code coloré, images locales et `![[intégrations]]`,
-  commentaires `%%…%%` masqués).
-- **Mode édition** : Markdown brut coloré (CodeMirror, comme Obsidian), enregistrement
-  automatique après une seconde (désactivable). `Ctrl+E` bascule entre les deux modes en
-  gardant sous les yeux le texte qu'on lisait.
-- **Zoom du contenu** (le texte de la note, pas l'interface) : `Ctrl` + `+` / `-` / `0`, Ctrl +
-  molette, pincement du trackpad ou du pavé tactile, menu « … » de l'onglet, et menu
-  « Présentation » sur Mac. Le pourcentage est retenu et s'affiche dans la barre d'état.
-- **Dossiers favoris** : clic droit sur un dossier du panneau de fichiers, « Ajouter aux
-  favoris ». Ils restent en haut du panneau d'un lancement à l'autre (liste propre à chaque
-  machine).
-- Onglets, explorateur du dossier de la note, plan du document, recherche (`Ctrl+F`),
-  thème clair/sombre, glisser-déposer de fichiers sur la fenêtre.
-- Un fichier modifié par une autre application est rechargé ; s'il a aussi des modifications
-  non enregistrées, Vitrum demande quelle version garder.
-- Les fins de ligne (CRLF/LF) et le BOM UTF-8 d'origine sont conservés à l'enregistrement.
-- Les liens entre notes ne sont pas un objectif, mais un `[[wikilink]]` s'ouvre quand la note
-  est trouvée (à côté du fichier, ou dans le coffre Obsidian s'il y en a un au-dessus).
+- **Mode lecture** : rendu final comme dans Obsidian (propriétés du front matter, callouts repliables, tableaux, tâches cochables, `==surlignage==`, `#tags`, notes de bas de page, formules `$…$`, diagrammes Mermaid, code coloré, images locales et `![[intégrations]]`, commentaires `%%…%%` masqués).
+- **Mode édition** : Markdown brut coloré (CodeMirror, comme Obsidian), enregistrement automatique après une seconde (désactivable). `Ctrl+E` bascule entre les deux modes en gardant sous les yeux le texte qu'on lisait.
+- **Zoom du contenu** (la note, pas l'interface) : `Ctrl` + `+` / `-` / `0`, Ctrl + molette, pincement du trackpad ou du pavé tactile, menu « … » de l'onglet, et menu « Présentation » sur Mac. Le pourcentage est retenu et s'affiche dans la barre d'état.
+- **Dossiers favoris** : clic droit sur un dossier du panneau de fichiers, « Ajouter aux favoris ». Ils restent en haut du panneau d'un lancement à l'autre.
+- Onglets, panneau des fichiers du dossier de la note, plan du document, recherche (`Ctrl+F`), thème clair ou sombre, glisser-déposer de fichiers sur la fenêtre.
+- Un fichier modifié par une autre application est rechargé ; s'il a aussi des modifications non enregistrées, Vitrum demande quelle version garder.
+- Les fins de ligne (CRLF ou LF) et le BOM UTF-8 d'origine sont conservés à l'enregistrement.
+- Les liens entre notes ne sont pas un objectif, mais un `[[wikilink]]` s'ouvre quand la note est trouvée (à côté du fichier, ou dans le coffre Obsidian s'il y en a un au-dessus).
 
 ## Raccourcis
 
@@ -60,130 +52,88 @@ Vitrum n'est pas signé : message du système au premier lancement, voir [Window
 
 Dans la vue de lecture, `Ctrl+clic` (ou clic molette) ouvre un lien dans un nouvel onglet.
 
-## Windows
+## Installation
 
-L'installateur ([`Vitrum-Setup.exe`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe))
-s'installe pour l'utilisateur courant, sans droits administrateur. Il n'est pas signé : Windows
-SmartScreen peut afficher « Windows a protégé votre ordinateur » ; cliquer alors sur
-« Informations complémentaires », puis « Exécuter quand même ».
+### Windows
 
-Il ajoute Vitrum au menu **Ouvrir avec** des fichiers `.md`, `.markdown`…, le
-déclare dans les **Applications par défaut** de Windows et propose, à la fin, d'en faire
-l'application par défaut des `.md`. Windows ne laisse aucun programme se déclarer par défaut
-tout seul : il ouvre donc la page des Paramètres consacrée à Vitrum, où il reste à cliquer sur
-`.md` puis sur Vitrum. Le même bouton existe dans les paramètres de Vitrum.
+1. Télécharger [`Vitrum-Setup.exe`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-Setup.exe) et le lancer : il s'installe pour l'utilisateur courant, sans droits administrateur.
+2. À la fin, il propose d'ouvrir les `.md` avec Vitrum par défaut. Windows ne laisse aucun programme se déclarer par défaut tout seul : il ouvre donc la page des Paramètres consacrée à Vitrum, où il reste à cliquer sur `.md` puis sur Vitrum. Le même bouton existe dans les paramètres de Vitrum.
 
-## macOS
+> [!NOTE]
+> Vitrum n'est pas signé numériquement. Windows peut afficher « Windows a protégé votre ordinateur » : cliquer sur « Informations complémentaires », puis « Exécuter quand même ».
 
-### Installer
+### Mac
 
-Télécharger [`Vitrum-macOS.dmg`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)
-(Mac à puce Apple, M1 et plus récent), l'ouvrir et glisser Vitrum dans **Applications**.
+1. Télécharger [`Vitrum-macOS.dmg`](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg), l'ouvrir et glisser Vitrum dans **Applications**.
+2. Au premier lancement, macOS bloque Vitrum, qui n'a pas d'identité de développeur Apple :
+   - **macOS 15 (Sequoia) et suivants** : ouvrir Vitrum une fois (macOS refuse, cliquer sur **Terminé**), puis **Réglages Système** › **Confidentialité et sécurité** › tout en bas, **Ouvrir quand même**, et confirmer.
+   - **macOS 14 (Sonoma) ou plus ancien** : clic droit sur Vitrum › **Ouvrir**, puis **Ouvrir** dans l'avertissement.
+   - Dans tous les cas, le Terminal fait la même chose : `xattr -dr com.apple.quarantine /Applications/Vitrum.app`
 
-Avec [GitHub CLI](https://cli.github.com) connecté (`gh auth login`), le `.dmg` arrive sans marque
-de quarantaine, donc sans avertissement au premier lancement :
+   Ensuite Vitrum s'ouvre normalement.
+3. Pour en faire l'application par défaut des `.md` : clic droit sur un `.md` › **Lire les informations** › **Ouvrir avec** : Vitrum › **Tout modifier…**
 
-```bash
-gh release download -R venaciteam/vitrum -p Vitrum-macOS.dmg
-```
+## Mises à jour
 
-### Premier lancement
+Télécharger la nouvelle version et l'installer par-dessus l'ancienne (sur Mac, remplacer Vitrum dans **Applications**). Les réglages, les favoris et les onglets ouverts sont conservés.
 
-Vitrum n'a qu'une signature « ad hoc », sans identité de développeur Apple : macOS bloque la
-première ouverture d'une copie téléchargée avec le navigateur.
+## Désinstallation
 
-- **macOS 15 (Sequoia) et suivants** : ouvrir Vitrum une fois (macOS refuse, cliquer sur
-  **Terminé**), puis **Réglages Système** › **Confidentialité et sécurité** › tout en bas,
-  **Ouvrir quand même**, et confirmer. Le clic droit › **Ouvrir** ne suffit plus.
-- **macOS 14 (Sonoma) ou plus ancien** : clic droit sur Vitrum › **Ouvrir**, puis **Ouvrir**
-  dans l'avertissement.
-- Dans tous les cas, le Terminal fait la même chose :
-  `xattr -dr com.apple.quarantine /Applications/Vitrum.app`
+- **Windows** : Paramètres › Applications › Vitrum › Désinstaller.
+- **Mac** : glisser Vitrum depuis **Applications** dans la Corbeille.
 
-Ensuite Vitrum s'ouvre normalement. Une copie compilée sur le Mac n'a pas besoin de cette étape.
+Les notes ne sont jamais touchées : Vitrum ne fait que les ouvrir là où elles sont.
 
-### Application par défaut des `.md`
+## Confidentialité
 
-Le paquet déclare les fichiers Markdown : Vitrum apparaît dans **Ouvrir avec** du Finder. Pour
-en faire l'application par défaut : clic droit sur un `.md` › **Lire les informations** ›
-**Ouvrir avec** : Vitrum › **Tout modifier…**
+Vitrum ne collecte rien et n'envoie rien à son auteur. Il n'a pas de serveur, et ses polices, ses icônes et ses outils de rendu sont livrés avec lui. Il ne se connecte à Internet que pour afficher ce que contiennent vos notes : images en ligne et vidéos intégrées (YouTube, Vimeo). Les réglages restent sur votre ordinateur.
 
-## Compiler
+## Signaler un problème
 
-Prérequis : [Rust](https://rustup.rs) et [Node.js](https://nodejs.org) 20 ou plus récent.
-Sur Mac, il faut aussi les outils en ligne de commande d'Xcode (`xcode-select --install`).
-Windows 11 fournit déjà WebView2.
+Les bugs et les idées sont les bienvenus dans les [issues](../../issues) du dépôt (un compte GitHub est nécessaire, et une issue est publique). Indiquer la version de Vitrum (Paramètres) et le système, et, si possible, joindre une petite note qui reproduit le problème.
+
+## Pour développer
+
+Prérequis : [Rust](https://rustup.rs) et [Node.js](https://nodejs.org) 20 ou plus récent. Sur Mac, il faut aussi les outils en ligne de commande d'Xcode (`xcode-select --install`). Windows 11 fournit déjà WebView2.
 
 ```bash
 npm install
-npm run tauri dev     # lancer en développement
-npm run tauri build   # version finale + installateur
+npm run dev           # l'interface seule dans un navigateur, avec un faux cœur (pratique pour l'apparence)
+npm run tauri dev     # l'application complète en développement
+npm run tauri build   # version finale et installateur
+cargo test            # dans src-tauri : tests du moteur Markdown
 ```
 
-Résultat :
+Résultat de `tauri build` : `src-tauri/target/release/bundle/nsis/Vitrum_X.Y.Z_x64-setup.exe` sous Windows, `src-tauri/target/release/bundle/dmg/Vitrum_X.Y.Z_aarch64.dmg` sur Mac.
 
-- Windows : `src-tauri/target/release/bundle/nsis/Vitrum_0.1.0_x64-setup.exe` (et
-  `src-tauri/target/release/vitrum.exe`, utilisable sans installation) ;
-- macOS : `src-tauri/target/release/bundle/dmg/Vitrum_0.1.0_aarch64.dmg` et `…/macos/Vitrum.app`.
-  Pour un binaire universel (Apple Silicon et Intel, comme le workflow de secours) :
-  `rustup target add aarch64-apple-darwin x86_64-apple-darwin`, puis
-  `npm run tauri build -- --target universal-apple-darwin` (résultat dans
-  `src-tauri/target/universal-apple-darwin/release/bundle/`).
+Organisation du code :
 
-Tests du moteur Markdown : `cargo test` dans `src-tauri`.
+| Dossier | Contenu |
+| --- | --- |
+| `src-tauri/` | le cœur en Rust (Tauri 2) : lecture et écriture des fichiers, rendu Markdown façon Obsidian (comrak et retouches de l'arbre), recherche des notes et images liées, surveillance des fichiers ouverts, protocole `vmedia` pour les médias locaux, instance unique, association des `.md` |
+| `src-tauri/windows/hooks.nsh` | ajouts à l'installateur Windows (« Ouvrir avec », application par défaut) |
+| `src/` | l'interface (TypeScript sans framework) : onglets, panneau des fichiers, plan, zoom, éditeur CodeMirror 6, Mermaid, KaTeX, highlight.js, icônes Lucide |
+| `scripts/` | `publier.sh` (Mac) et `publier.ps1` (PC) fabriquent et publient une version, `version.mjs` change la version partout |
+| `dev/` | note de démonstration, affichée par `npm run dev` |
 
-## Publier une version
+### Publier une version
 
-Chaque machine fabrique sa version et l'envoie elle-même dans la publication GitHub : le PC
-l'installateur Windows, le Mac le `.dmg` (pour sa seule puce, bien plus rapide qu'un binaire
-universel). Les deux fabriquent le même commit, `origin/main`, dans une copie propre sur le disque
-interne (`~/Library/Caches/venacity-build/vitrum` sur le Mac, `%LOCALAPPDATA%\venacity-build\vitrum`
-sur le PC) : dépendances et cache Rust y restent d'une version à l'autre.
+Tout se fabrique en local : chaque machine fabrique sa version et l'envoie elle-même dans la publication GitHub, le PC l'installateur Windows, le Mac le `.dmg`. Les deux fabriquent le même commit, `origin/main`, dans une copie propre sur le disque interne (`~/Library/Caches/venacity-build/vitrum` sur le Mac, `%LOCALAPPDATA%\venacity-build\vitrum` sur le PC). Il faut en plus [GitHub CLI](https://cli.github.com) connecté (`gh auth login`).
 
-Prérequis, en plus de ceux de [Compiler](#compiler) : [GitHub CLI](https://cli.github.com) connecté
-(`gh auth login`). Sur le Mac : `xcode-select --install`, [Rust](https://rustup.rs), Node.js 20 ou
-plus récent. Sur le PC : Rust avec les outils de compilation C++ de Visual Studio, Node.js 20 ou plus
-récent.
-
-1. Changer la version partout d'un coup (`package.json`, `package-lock.json`,
-   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`), commiter et pousser :
+1. Changer la version partout d'un coup, commiter et pousser :
 
    ```bash
-   node scripts/version.mjs 0.2.0
-   git commit -am "Version 0.2.0" && git push
+   node scripts/version.mjs X.Y.Z
+   git commit -am "Version X.Y.Z" && git push
    ```
 
-2. Essai sur chaque machine, sans rien envoyer : `scripts/publier.sh --essai` (Mac),
-   `.\scripts\publier.ps1 -Essai` (PC). Le fichier produit est indiqué à la fin.
-   Plus simple : double-cliquer sur `Fabriquer Vitrum (Mac).command` ou `Fabriquer Vitrum (PC).cmd`,
-   à la racine du dépôt. Ils demandent « 1 = essai » ou « 2 = envoyer sur GitHub » (étape 3), puis
-   ouvrent le dossier du fichier produit.
-3. Publication : `scripts/publier.sh` sur le Mac, `.\scripts\publier.ps1` sur le PC, dans n'importe quel
-   ordre. Le premier crée la version `vX.Y.Z` en **brouillon** (notes en français avec
-   `--notes notes.md` / `-Notes notes.md`) et y dépose son fichier ; le second y ajoute le sien et
-   publie la version. Les liens « dernière version » ne changent donc qu'une fois `Vitrum-Setup.exe`
-   et `Vitrum-macOS.dmg` présents tous les deux.
+2. Essai sur chaque machine, sans rien envoyer : `scripts/publier.sh --essai` (Mac), `.\scripts\publier.ps1 -Essai` (PC). Plus simple : double-cliquer sur `Fabriquer Vitrum (Mac).command` ou `Fabriquer Vitrum (PC).cmd` à la racine du dépôt, qui demandent « 1 = essai » ou « 2 = envoyer sur GitHub », puis ouvrent le dossier du fichier produit.
+3. Publication : `scripts/publier.sh` sur le Mac, `.\scripts\publier.ps1` sur le PC, dans n'importe quel ordre. Le premier crée la version en **brouillon** (notes avec `--notes notes.md` / `-Notes notes.md`) et y dépose son fichier ; le second y ajoute le sien et publie la version. Les liens de téléchargement ne changent donc qu'une fois les deux fichiers présents.
 
-Les scripts s'arrêtent s'il reste des modifications non commitées, si `main` diffère de
-`origin/main`, si les versions des trois fichiers ne concordent pas, si les tests du cœur échouent,
-ou si la publication existante vise un autre commit.
+Les scripts s'arrêtent s'il reste des modifications non commitées, si `main` diffère de `origin/main`, si les numéros de version ne concordent pas, si les tests du cœur échouent, ou si la publication existante vise un autre commit.
 
-**Secours** : onglet **Actions** › **build** › **Run workflow** fabrique les deux sur GitHub (une
-vingtaine de minutes, `.dmg` universel) ; avec l'option **publier**, il publie aussi la version
-de `tauri.conf.json`. Sans l'option, les fichiers restent dans les **Artifacts** de l'exécution
-(30 jours).
+## Licence
 
-## Organisation
+[MIT](LICENSE) © 2026 Venacity
 
-- `src-tauri/` — le cœur en **Rust** (Tauri 2) : lecture et écriture des fichiers, rendu Markdown
-  façon Obsidian (comrak + retouches de l'arbre), recherche des notes et images liées,
-  surveillance des fichiers ouverts, protocole `vmedia` pour afficher les médias locaux,
-  instance unique, association des `.md`.
-- `src-tauri/windows/hooks.nsh` — ajouts à l'installateur Windows (« Ouvrir avec », appli par défaut).
-- `scripts/` — `publier.sh` (Mac) et `publier.ps1` (PC) fabriquent et publient une version,
-  `version.mjs` change la version partout.
-- `.github/workflows/build.yml` — fabrication de secours par GitHub Actions, lancée à la main.
-- `src/` — l'interface (TypeScript sans framework) : onglets, explorateur, plan, éditeur
-  CodeMirror 6, Mermaid, KaTeX, highlight.js, icônes Lucide.
-- `dev/` — note d'exemple ; `npm run dev` seul affiche l'interface dans un navigateur avec un
-  faux cœur, pratique pour retoucher l'apparence.
+Vitrum s'appuie sur [Tauri](https://tauri.app), [comrak](https://github.com/kivikakk/comrak), [CodeMirror](https://codemirror.net), [Mermaid](https://mermaid.js.org), [KaTeX](https://katex.org), [highlight.js](https://highlightjs.org) et [Lucide](https://lucide.dev), chacun sous sa propre licence libre.
