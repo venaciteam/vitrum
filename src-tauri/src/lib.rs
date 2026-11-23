@@ -180,6 +180,7 @@ fn mac_menu(app: &AppHandle) -> tauri::Result<tauri::menu::Menu<tauri::Wry>> {
         true,
         &[
             &P::about(app, Some("À propos de Vitrum"), None)?,
+            &MenuItem::with_id(app, "maj-verifier", "Rechercher les mises à jour…", true, None::<&str>)?,
             &P::separator(app)?,
             &P::services(app, Some("Services"))?,
             &P::separator(app)?,
@@ -236,6 +237,9 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        // Mises à jour : l'interface vérifie et installe (src/updates.ts), le cœur vérifie la signature.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .plugin(
             tauri_plugin_window_state::Builder::new()
                 .with_state_flags(StateFlags::all() & !StateFlags::VISIBLE)
@@ -245,6 +249,8 @@ pub fn run() {
             let id = event.id().as_ref();
             if id.starts_with("zoom-") {
                 let _ = app.emit("zoom", id);
+            } else if id == "maj-verifier" {
+                let _ = app.emit("maj-verifier", ());
             }
         })
         .manage(AppState::default())

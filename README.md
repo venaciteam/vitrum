@@ -75,7 +75,11 @@ Dans la vue de lecture, `Ctrl+clic` (ou clic molette) ouvre un lien dans un nouv
 
 ## Mises à jour
 
-Télécharger la nouvelle version et l'installer par-dessus l'ancienne (sur Mac, remplacer Vitrum dans **Applications**). Les réglages, les favoris et les onglets ouverts sont conservés.
+Depuis la version 0.3.0, Vitrum vérifie lui-même s'il existe une nouvelle version (au lancement, puis toutes les six heures). Quand c'est le cas, une carte apparaît en bas à droite : « Nouveautés » ouvre la page de la version, « Installer et redémarrer » enregistre vos notes, télécharge la mise à jour, vérifie sa signature, l'installe et relance Vitrum. Rien ne s'installe sans votre accord.
+
+Dans les Paramètres, « Mises à jour » permet de couper la vérification automatique ou de vérifier tout de suite. Sur Mac, le menu **Vitrum** › **Rechercher les mises à jour…** fait de même.
+
+Avant la 0.3.0 : télécharger la nouvelle version et l'installer par-dessus l'ancienne (sur Mac, remplacer Vitrum dans **Applications**). Les réglages, les favoris et les onglets ouverts sont conservés.
 
 ## Désinstallation
 
@@ -86,7 +90,7 @@ Les notes ne sont jamais touchées : Vitrum ne fait que les ouvrir là où elles
 
 ## Confidentialité
 
-Vitrum ne collecte rien et n'envoie rien à son auteur. Il n'a pas de serveur, et ses polices, ses icônes et ses outils de rendu sont livrés avec lui. Il ne se connecte à Internet que pour afficher ce que contiennent vos notes : images en ligne et vidéos intégrées (YouTube, Vimeo). Les réglages restent sur votre ordinateur.
+Vitrum ne collecte rien et n'envoie rien à son auteur. Il n'a pas de serveur, et ses polices, ses icônes et ses outils de rendu sont livrés avec lui. Il ne se connecte à Internet que pour afficher ce que contiennent vos notes (images en ligne, vidéos intégrées YouTube ou Vimeo) et pour chercher les mises à jour sur GitHub, ce qui se coupe dans les Paramètres. Les réglages restent sur votre ordinateur.
 
 ## Signaler un problème
 
@@ -113,7 +117,7 @@ Organisation du code :
 | `src-tauri/` | le cœur en Rust (Tauri 2) : lecture et écriture des fichiers, rendu Markdown façon Obsidian (comrak et retouches de l'arbre), recherche des notes et images liées, surveillance des fichiers ouverts, protocole `vmedia` pour les médias locaux, instance unique, association des `.md` |
 | `src-tauri/windows/hooks.nsh` | ajouts à l'installateur Windows (« Ouvrir avec », application par défaut) |
 | `src/` | l'interface (TypeScript sans framework) : onglets, panneau des fichiers, plan, zoom, éditeur CodeMirror 6, Mermaid, KaTeX, highlight.js, icônes Lucide |
-| `scripts/` | `publier.sh` (Mac) et `publier.ps1` (PC) fabriquent et publient une version, `version.mjs` change la version partout |
+| `scripts/` | `publier.sh` (Mac) et `publier.ps1` (PC) fabriquent et publient une version, `latest-json.mjs` écrit le fichier des mises à jour, `version.mjs` change la version partout |
 | `dev/` | note de démonstration, affichée par `npm run dev` |
 
 ### Publier une version
@@ -131,6 +135,18 @@ Tout se fabrique en local : chaque machine fabrique sa version et l'envoie elle-
 3. Publication : `scripts/publier.sh` sur le Mac, `.\scripts\publier.ps1` sur le PC, dans n'importe quel ordre. Le premier crée la version en **brouillon** (notes avec `--notes notes.md` / `-Notes notes.md`) et y dépose son fichier ; le second y ajoute le sien et publie la version. Les liens de téléchargement ne changent donc qu'une fois les deux fichiers présents.
 
 Les scripts s'arrêtent s'il reste des modifications non commitées, si `main` diffère de `origin/main`, si les numéros de version ne concordent pas, si les tests du cœur échouent, ou si la publication existante vise un autre commit.
+
+Chaque machine envoie aussi son fichier de mise à jour signé : `Vitrum-Setup.exe.sig` pour le PC, `Vitrum-macOS.app.tar.gz` et sa `.sig` pour le Mac. La seconde machine écrit `latest.json` (`scripts/latest-json.mjs`) juste avant de publier : c'est ce fichier, à l'adresse `releases/latest/download/latest.json`, que lisent les copies installées.
+
+### Clé de signature des mises à jour
+
+Vitrum n'installe une mise à jour que si elle est signée par la clé dont la partie publique est dans `src-tauri/tauri.conf.json` (`plugins.updater.pubkey`). La partie privée ne doit jamais être sur GitHub ni en clair sur le disque :
+
+- **PC** : chiffrée par Windows pour la session courante, dans `%LOCALAPPDATA%\venacity-build\cles\vitrum-maj.dpapi`. `publier.ps1` la lit.
+- **Mac** : dans le trousseau, service `vitrum-maj`, compte `vitrum`. `publier.sh` la lit.
+- **Copie de secours** : chiffrée par `age` avec une phrase secrète, hors du dépôt.
+
+Perdre la clé ne casse rien, mais les copies déjà installées ne pourront plus se mettre à jour seules : il faudrait une nouvelle clé et une installation à la main. Sans clé, `--essai` / `-Essai` fabrique quand même, sans fichier de mise à jour.
 
 ## Licence
 

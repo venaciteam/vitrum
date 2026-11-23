@@ -13,13 +13,14 @@ import { basename, dirname, NOTE_EXT, samePath } from './paths';
 import { addRecent, applyAppearance, onSettingsChange, saveSession, session, settings, updateSettings, type Mode } from './settings';
 import { Tab, type TabHost } from './tab';
 import { copyText, dropdown, el, iconButton, Menu, notice, openModal, settingRow, toggle } from './ui';
+import { Updater, type UpdateHost } from './updates';
 import { ZoomController, zoomKey, zoomLabel, type ZoomTarget } from './zoom';
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 
 const MD_FILTER = [{ name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'mkdn', 'mdx', 'txt'] }];
 
-export class Workspace implements TabHost, ZoomTarget {
+export class Workspace implements TabHost, ZoomTarget, UpdateHost {
   tabs: Tab[] = [];
   active: Tab | null = null;
   private explorer: Explorer;
@@ -33,6 +34,7 @@ export class Workspace implements TabHost, ZoomTarget {
   private closed: string[] = [];
   private windowTitle = '';
   private zoom!: ZoomController;
+  private updater!: Updater;
 
   constructor() {
     this.explorer = new Explorer({
@@ -55,6 +57,7 @@ export class Workspace implements TabHost, ZoomTarget {
     this.zoom = new ZoomController(this);
     this.zoom.onChange(() => this.updateStatus());
     this.bindKeys();
+    this.updater = new Updater(this);
     if (isTauri) {
       this.bindWindow();
       await this.listenBackend();
@@ -75,6 +78,13 @@ export class Workspace implements TabHost, ZoomTarget {
     }
     if (!this.tabs.length) this.newTab();
     if (isTauri) await getCurrentWindow().show();
+    this.updater.start();
+  }
+
+  /** Avant une mise à jour : session et notes enregistrées (ou choix de la personne). */
+  async prepareForUpdate(): Promise<boolean> {
+    this.saveSessionNow();
+    return this.confirmClose(this.tabs);
   }
 
   // --- Onglets ---
@@ -681,6 +691,18 @@ export class Workspace implements TabHost, ZoomTarget {
       const defaultRow = el('div');
       content.append(defaultRow);
       void this.fillDefaultAppRow(defaultRow);
+
+      section('Mises à jour');
+      const checkNow = el('button', '', 'Rechercher maintenant');
+      checkNow.addEventListener('click', () => void this.updater.check(true));
+      content.append(
+        settingRow(
+          'Rechercher les mises à jour',
+          'Au lancement puis toutes les six heures. Une nouvelle version est proposée, jamais installée sans votre accord.',
+          toggle(settings.checkUpdates, (v) => updateSettings({ checkUpdates: v })),
+        ),
+        settingRow('Vérifier tout de suite', '', checkNow),
+      );
 
       const about = el('div', 'setting-about', 'Vitrum');
       content.append(about);

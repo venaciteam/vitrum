@@ -11,6 +11,11 @@
 # Publication : la première machine crée la version en brouillon, la seconde la publie quand les deux
 # fichiers (Vitrum-Setup.exe et Vitrum-macOS.dmg) sont présents. « latest » ne bouge donc qu'une fois la
 # version complète.
+#
+# Mises à jour automatiques : chaque machine signe aussi son fichier de mise à jour (Vitrum-Setup.exe.sig
+# ici, Vitrum-macOS.app.tar.gz et sa .sig sur le Mac) avec la clé de signature de Vitrum. Sur ce PC, la clé
+# est gardée chiffrée par Windows (DPAPI, liée à la session) dans %LOCALAPPDATA%\venacity-build\cles\
+# vitrum-maj.dpapi, jamais en clair. La seconde machine écrit latest.json, que lisent les copies installées.
 param([switch]$Essai, [string]$Notes = "")
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +23,8 @@ $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new()
 $Fichier = "Vitrum-Setup.exe"
 $Autre = "Vitrum-macOS.dmg"
+# Tout ce qu'une version complète doit contenir avant d'écrire latest.json et de la publier.
+$Attendus = "Vitrum-Setup.exe", "Vitrum-Setup.exe.sig", "Vitrum-macOS.dmg", "Vitrum-macOS.app.tar.gz", "Vitrum-macOS.app.tar.gz.sig"
 function Etape($t) { Write-Host "`n[*] $t" -ForegroundColor Cyan }
 function Alerte($t) { Write-Host "    !! $t" -ForegroundColor Yellow }
 function Arreter($t) { Write-Host "`n[!] $t" -ForegroundColor Red; exit 1 }
@@ -41,6 +48,22 @@ foreach ($c in "git", "gh", "node", "npm", "cargo") {
 $Distant = git -C $Depot remote get-url origin
 $Nom = $Distant -replace '^.*github\.com[:/]', '' -replace '\.git$', ''
 if (-not $Essai -and -not (Reussit { gh auth status })) { Arreter "gh n'est pas connecté : gh auth login" }
+
+Etape "Clé de signature des mises à jour"
+$CleFichier = Join-Path $env:LOCALAPPDATA "venacity-build\cles\vitrum-maj.dpapi"
+$SansCle = $false
+if (Test-Path $CleFichier) {
+    try { $Secure = Get-Content $CleFichier | ConvertTo-SecureString }
+    catch { Arreter "clé illisible ($CleFichier) : elle ne se déchiffre que dans la session Windows qui l'a rangée." }
+    $env:TAURI_SIGNING_PRIVATE_KEY = [Net.NetworkCredential]::new("", $Secure).Password
+    $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
+    Write-Host "    trouvée"
+} elseif ($Essai) {
+    Alerte "pas de clé ($CleFichier) : essai sans fichier de mise à jour signé"
+    $SansCle = $true
+} else {
+    Arreter "pas de clé de signature ($CleFichier). Elle se restaure depuis .claude\secrets\vitrum-maj.key.age (voir le README, « Clé de signature des mises à jour »)."
+}
 
 Etape "État du dépôt ($Depot)"
 git -C $Depot fetch -q origin; Verifier "git fetch"
@@ -80,13 +103,27 @@ npm ci --no-audit --no-fund; Verifier "npm ci"
 Push-Location src-tauri; cargo test --locked; Verifier "cargo test"; Pop-Location
 
 Etape "Fabrication (tauri build)"
-npm run tauri build; Verifier "tauri build"
-$Exe = Get-ChildItem src-tauri\target\release\bundle\nsis\*-setup.exe -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-if (-not $Exe) { Arreter "aucun installateur dans src-tauri\target\release\bundle\nsis" }
 $Sortie = Join-Path (Split-Path $Cible) "sorties\vitrum-$Version"
 New-Item -ItemType Directory -Force $Sortie | Out-Null
+Remove-Item (Join-Path $Sortie "*") -Force -ErrorAction SilentlyContinue
+if ($SansCle) {
+    $SansMaj = Join-Path $Sortie "sans-maj.conf.json"
+    Set-Content -Encoding ascii $SansMaj '{ "bundle": { "createUpdaterArtifacts": false } }'
+    npm run tauri build -- --config $SansMaj; Verifier "tauri build"
+    Remove-Item $SansMaj
+} else {
+    npm run tauri build; Verifier "tauri build"
+}
+$Exe = Get-ChildItem src-tauri\target\release\bundle\nsis\*-setup.exe -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $Exe) { Arreter "aucun installateur dans src-tauri\target\release\bundle\nsis" }
 Copy-Item $Exe.FullName (Join-Path $Sortie $Fichier) -Force
 Write-Host "    $(Join-Path $Sortie $Fichier)"
+if (-not $SansCle) {
+    $Sig = "$($Exe.FullName).sig"
+    if (-not (Test-Path $Sig) -or $Exe.LastWriteTime -gt (Get-Item $Sig).LastWriteTime.AddMinutes(1)) { Arreter "signature absente ou périmée : $Sig" }
+    Copy-Item $Sig (Join-Path $Sortie "$Fichier.sig") -Force
+    Write-Host "    $(Join-Path $Sortie "$Fichier.sig")"
+}
 
 if ($Essai) { Write-Host "`nEssai terminé, rien n'est envoyé : $(Join-Path $Sortie $Fichier)" -ForegroundColor Green; exit 0 }
 
@@ -100,11 +137,18 @@ if (Reussit { gh release view $Etiquette -R $Nom }) {
     Verifier "gh release create"
     Write-Host "    brouillon créé"
 }
-gh release upload $Etiquette (Join-Path $Sortie $Fichier) -R $Nom --clobber; Verifier "gh release upload"
+gh release upload $Etiquette (Join-Path $Sortie $Fichier) (Join-Path $Sortie "$Fichier.sig") -R $Nom --clobber; Verifier "gh release upload"
 $Fichiers = gh release view $Etiquette -R $Nom --json assets -q '.assets[].name'
-if ($Fichiers -contains $Autre) {
+$Manquants = $Attendus | Where-Object { $Fichiers -notcontains $_ }
+if (-not $Manquants) {
+    Etape "latest.json (mises à jour automatiques)"
+    gh release download $Etiquette -R $Nom -p "Vitrum-macOS.app.tar.gz.sig" -D $Sortie --clobber; Verifier "gh release download"
+    node scripts\latest-json.mjs $Version $Nom $Sortie (Join-Path $Sortie "latest.json"); Verifier "latest-json.mjs"
+    gh release upload $Etiquette (Join-Path $Sortie "latest.json") -R $Nom --clobber; Verifier "gh release upload latest.json"
     gh release edit $Etiquette -R $Nom --draft=false --latest; Verifier "gh release edit"
-    Write-Host "`nPubliée : $Etiquette est la dernière version, avec $Fichier et $Autre." -ForegroundColor Green
+    Write-Host "`nPubliée : $Etiquette est la dernière version, avec $Fichier et $Autre. Les copies installées vont la proposer." -ForegroundColor Green
+} elseif ($Fichiers -contains $Autre) {
+    Arreter "le Mac a envoyé $Autre mais pas tout : manque $($Manquants -join ', '). Relancer publier.sh sur le Mac."
 } else {
     Write-Host "`n$Fichier envoyé. La version reste en brouillon jusqu'à l'envoi de $Autre par le Mac." -ForegroundColor Green
 }

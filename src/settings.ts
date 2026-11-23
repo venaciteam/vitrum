@@ -13,6 +13,8 @@ export interface Settings {
   autosave: boolean;
   spellcheck: boolean;
   strictLineBreaks: boolean;
+  /** Recherche des mises à jour au lancement et toutes les six heures. */
+  checkUpdates: boolean;
   leftOpen: boolean;
   rightOpen: boolean;
   leftWidth: number;
@@ -28,6 +30,7 @@ const DEFAULTS: Settings = {
   autosave: true,
   spellcheck: false,
   strictLineBreaks: false,
+  checkUpdates: true,
   leftOpen: true,
   rightOpen: false,
   leftWidth: 260,
