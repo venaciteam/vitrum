@@ -1,4 +1,5 @@
-/* Couleurs et typographie inspirées du thème par défaut d'Obsidian. */
+/* Couleurs et typographie inspirées du thème par défaut d'Obsidian, avec l'accent bleu glacier
+   de l'icône de Vitrum (le même que sa landing) au lieu du violet d'Obsidian. */
 
 :root {
   --font-text: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', 'Inter',
@@ -35,9 +36,10 @@
   --ribbon-width: 44px;
   --tab-radius: 6px;
 
-  --accent-h: 254;
-  --accent-s: 80%;
-  --accent-l: 68%;
+  /* Sombre : #6cc3ff, le bleu clair de l'icône. */
+  --accent-h: 205;
+  --accent-s: 100%;
+  --accent-l: 71%;
 }
 
 .theme-dark {
@@ -64,7 +66,11 @@
   --color-purple-rgb: 168, 130, 255;
   --color-pink-rgb: 250, 153, 205;
 
-  --accent-l: 68%;
+  --accent-h: 205;
+  --accent-s: 100%;
+  --accent-l: 71%;
+  /* Le blanc ne se lit pas sur ce bleu clair : texte bleu nuit sur les boutons et les cases. */
+  --accent-ink: #06182b;
   --background-modifier-hover: rgba(255, 255, 255, 0.075);
   --background-modifier-active-hover: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.15);
   --background-modifier-form-field: var(--color-base-25);
@@ -100,7 +106,11 @@
   --color-purple-rgb: 120, 82, 238;
   --color-pink-rgb: 213, 57, 132;
 
-  --accent-l: 62%;
+  /* Clair : #1a74d4, bleu assombri pour rester lisible sur blanc. */
+  --accent-h: 211;
+  --accent-s: 78%;
+  --accent-l: 47%;
+  --accent-ink: #ffffff;
   --background-modifier-hover: rgba(0, 0, 0, 0.067);
   --background-modifier-active-hover: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.15);
   --background-modifier-form-field: var(--color-base-00);
@@ -124,7 +134,7 @@ body {
   --text-normal: var(--color-base-100);
   --text-muted: var(--color-base-70);
   --text-faint: var(--color-base-50);
-  --text-on-accent: #ffffff;
+  --text-on-accent: var(--accent-ink, #ffffff);
   --text-error: rgb(var(--color-red-rgb));
   --text-warning: rgb(var(--color-orange-rgb));
   --text-success: rgb(var(--color-green-rgb));
