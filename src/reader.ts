@@ -158,7 +158,9 @@ let mermaidCount = 0;
 
 async function mermaid(pre: HTMLElement, source: string): Promise<void> {
   const m = await (mermaidPromise ??= import('mermaid').then((x) => x.default));
-  const theme = isDark() ? 'dark' : 'default';
+  // Clair : « neutral » (cases grises) plutôt que « default », dont le lavande rappelait l'ancien
+  // accent violet ; c'est l'équivalent clair du thème sombre.
+  const theme = isDark() ? 'dark' : 'neutral';
   if (theme !== mermaidTheme) {
     m.initialize({ startOnLoad: false, securityLevel: 'strict', theme, suppressErrorRendering: true });
     mermaidTheme = theme;
