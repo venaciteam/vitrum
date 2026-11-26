@@ -6,7 +6,7 @@ Vitrum ouvre n'importe quel fichier `.md` du disque, sans coffre ni import : un 
 
 *Vitrum* : « verre » en latin, clin d'œil à l'obsidienne, un verre volcanique.
 
-> Projet indépendant, sans lien avec Obsidian.
+> Projet indépendant, sans lien avec Obsidian. Obsidian est un logiciel de Dynalist Inc.
 
 ![Vitrum en mode lecture : panneau des fichiers à gauche, note de démonstration avec ses propriétés, ses liens et ses callouts](docs/captures/lecture.png)
 
@@ -23,6 +23,10 @@ Vitrum ouvre n'importe quel fichier `.md` du disque, sans coffre ni import : un 
 - **[Télécharger Vitrum pour Mac](https://github.com/venaciteam/vitrum/releases/latest/download/Vitrum-macOS.dmg)** : ouvrir le `.dmg` et glisser Vitrum dans **Applications**.
 
 Vitrum n'est pas signé : le message du système au premier lancement et les étapes sont dans [Installation](#installation). Toutes les versions : [publications](../../releases).
+
+| Mode édition | Tâches, code, diagrammes | Thème clair |
+| --- | --- | --- |
+| ![Mode édition : le Markdown brut de la note, coloré, avec son front matter](docs/captures/edition.png) | ![Mode lecture : tâches cochables, tableau, code coloré, diagramme Mermaid et formule](docs/captures/rendu.png) | ![Mode lecture en thème clair](docs/captures/clair.png) |
 
 ## Ce que fait Vitrum
 
